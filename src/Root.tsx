@@ -4,11 +4,11 @@ import { store } from './redux/store';
 import { fetchAppAssets } from './redux/slices/hostedAssets.slice';
 import { colors, mergeColors } from './constants';
 import { ConfigurationProvider } from './context/configurationContext';
+import { AppConfig, FetchAppAssetsResponse } from './types/interface/config';
 
-interface AppConfig {
-  appConfig: any;
-  colors: any;
-}
+// interface AppConfig {
+//   appConfig: any;
+// }
 
 const Root = () => {
   const [isReady, setIsReady] = useState(false);
@@ -21,27 +21,24 @@ const Root = () => {
       //   await i18n.init();
       // }
 
-      const res: any = await store.dispatch(fetchAppAssets()).unwrap();
+      const res: FetchAppAssetsResponse = await store
+        .dispatch(fetchAppAssets())
+        .unwrap();
+      // console.log('res', JSON.stringify(res));
       if (res.appConfig) {
         // i18n.addResourceBundle(
         //   'en',
         //   'translation',
         //   mergeTranslations(res.translations),
         // );
-        setConfig({
-          appConfig: res.appConfig,
-          colors: mergeColors(res.appConfig.branding || {}),
-        });
+        setConfig(res.appConfig);
       }
 
       setIsReady(true);
     } catch (error) {
       console.error('App initialization failed:', error);
       // Fallback to default config if fetch fails
-      setConfig({
-        appConfig: {},
-        colors: colors,
-      });
+      setConfig(null);
       setIsReady(true);
     }
   }, []);
@@ -51,8 +48,8 @@ const Root = () => {
   }, [initializeApp]);
 
   return (
-    <ConfigurationProvider value={config?.appConfig}>
-      <Text>Root</Text>
+    <ConfigurationProvider value={config}>
+      <Text style={{ marginTop: 100 }}>Root</Text>
     </ConfigurationProvider>
   );
 };
