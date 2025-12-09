@@ -1,9 +1,10 @@
 // Basic configuration for React Native app
 // This mimics the web template structure but simplified for mobile
+import { ENV } from '../constants';
 
 const defaultConfig = {
   // App basic settings
-  marketplaceName: process.env.EXPO_PUBLIC_MARKETPLACE_NAME || 'App Template',
+  marketplaceName: ENV.MARKETPLACE_NAME || 'App Template',
 
   // Localization
   localization: {
@@ -18,6 +19,17 @@ const defaultConfig = {
   // Access control (placeholder)
   accessControl: {
     // Will be expanded when implementing auth
+  },
+
+  // App CDN assets configuration
+  appCdnAssets: {
+    translations: 'content/translations.json',
+    footer: 'content/footer.json',
+    branding: 'design/branding.json',
+    listingTypes: 'listings/listing-types.json',
+    listingFields: 'listings/listing-fields.json',
+    userTypes: 'users/user-types.json',
+    userFields: 'users/user-fields.json',
   },
 
   // Placeholder for mandatory configurations check
