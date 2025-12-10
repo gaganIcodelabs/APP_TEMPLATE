@@ -1,8 +1,15 @@
-import Root from './Root';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
 import { store } from './redux/store';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { setup, wrapComponent } from './util/log';
+import { ENV } from './constants/env';
+import Root from './Root';
+
+// Initialize logging and error tracking only if Sentry DSN is provided
+if (ENV.SENTRY_DSN) {
+  setup();
+}
 
 const App = () => {
   return (
@@ -16,4 +23,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default wrapComponent(App);
