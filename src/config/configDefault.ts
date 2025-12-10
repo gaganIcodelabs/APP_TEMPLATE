@@ -9,6 +9,7 @@ import * as maps from './configMaps';
 import * as branding from './configBranding';
 import * as layout from './configLayout';
 import * as user from './configUser';
+import * as analytics from './configAnalytics';
 
 // NOTE: only expose configuration that should be visible in the
 // client side, don't add any server secrets to this file.
@@ -59,6 +60,9 @@ const defaultConfig = {
   branding,
   // Modify layout configs in configLayout.js
   layout,
+  // Modify analytics configs in configAnalytics.js
+  // By default, it doesn't add anything.
+  analytics,
 
   // Note: Facebook app id is used for Facebook login, but it is also used for tracking:
   // Facebook counts shares with app or page associated by this id

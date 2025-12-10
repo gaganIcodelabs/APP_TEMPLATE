@@ -18,6 +18,8 @@ declare module 'react-native-config' {
     DEV_API_SERVER_PORT?: string;
     FACEBOOK_APP_ID?: string;
     GOOGLE_MAPS_API_KEY?: string;
+    REACT_APP_GOOGLE_ANALYTICS_ID?: string;
+    REACT_APP_PLAUSIBLE_DOMAINS?: string;
   }
 
   export const Config: NativeConfig;
