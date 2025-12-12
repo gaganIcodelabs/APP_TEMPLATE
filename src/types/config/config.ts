@@ -59,3 +59,5 @@ export type TransactionSizeConfig = {
     type: string;
   };
 };
+
+export type AnalyticsConfig = any;

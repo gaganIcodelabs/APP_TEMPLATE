@@ -9,6 +9,7 @@ import { StorableError } from '../../types/api/api.types';
 import { Assets, TranslationAssetData } from '../../types/api/assets.types';
 import {
   AccessControlConfig,
+  AnalyticsConfig,
   CategoryNode,
   GoogleSearchConsoleConfig,
   ListingFields,
@@ -49,7 +50,7 @@ export type AssetsThunkResponse = {
     search: SearchConfig;
 
     transactionSize: TransactionSizeConfig;
-    analytics: {};
+    analytics: AnalyticsConfig;
     googleSearchConsole: GoogleSearchConsoleConfig;
     maps: MapsConfig;
   };

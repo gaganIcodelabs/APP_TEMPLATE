@@ -1,18 +1,54 @@
 import defaultConfig from '../config/configDefault';
 import { subUnitDivisors } from '../config/settingsCurrency';
-import { AssetSliceData } from '../redux/slices/hostedAssets.slice';
+import {
+  AssetSliceData,
+  AssetsThunkResponse,
+} from '../redux/slices/hostedAssets.slice';
+import { Assets } from '../types/api/assets.types';
 import {
   getSupportedProcessesInfo,
   isBookingProcessAlias,
 } from '../transactions/transaction';
-import { CategoryConfiguration, CategoryNode } from '../types/config';
+import {
+  CategoryNode,
+  LayoutAssetData,
+  ListingFields,
+  ListingType,
+  TransactionSizeConfig,
+} from '../types/config';
+import { ENV } from '../constants';
+import { ImageAsset } from '../types';
 
 // Generic helpers for validating config values
 
-const printErrorIfHostedAssetIsMissing = props => {
+// Type aliases for cleaner code
+type HostedCategoriesConfig = AssetsThunkResponse['hostedConfig']['categories'];
+type HostedConfigType = AssetsThunkResponse['hostedConfig'];
+type HostedAnalyticsConfig = AssetsThunkResponse['hostedConfig']['analytics'];
+type hostedUserFieldsTypes = AssetsThunkResponse['hostedConfig']['userFields'];
+type hostedUserTypesTypes =
+  AssetsThunkResponse['hostedConfig']['userTypes']['userTypes'];
+type HostedLocalizationConfig =
+  AssetsThunkResponse['hostedConfig']['localization'];
+type HostedAccessControlConfig =
+  AssetsThunkResponse['hostedConfig']['accessControl'];
+type HostedMapsConfig = AssetsThunkResponse['hostedConfig']['maps'];
+// Branding config type that extends the base Assets branding with additional properties
+type BrandingConfigType = Assets['branding'] & {
+  logoSettings?: {
+    format: string;
+    height: number;
+  };
+  marketplaceColors?: {
+    mainColor?: string;
+    primaryButton?: string;
+  };
+};
+
+const printErrorIfHostedAssetIsMissing = (props: Record<string, any>) => {
   Object.entries(props).map(entry => {
     const [key, value = {}] = entry || [];
-    if (Object.keys(value)?.length === 0) {
+    if (Object.keys(value || {})?.length === 0) {
       console.error(`Mandatory hosted asset for ${key} is missing.
       Check that "appCdnAssets" property has valid paths in src/config/configDefault.js file,
       and that the marketplace has added content in Console`);
@@ -21,7 +57,7 @@ const printErrorIfHostedAssetIsMissing = props => {
 };
 
 // Functions to create built-in specs for category setup.
-const depthFirstSearch = (category, iterator, depth = 0) => {
+const depthFirstSearch = (category: any, iterator: any, depth = 0) => {
   const { subcategories = [] } = category;
   return iterator(
     depth,
@@ -29,9 +65,9 @@ const depthFirstSearch = (category, iterator, depth = 0) => {
   );
 };
 // Pick maximum depth from subcategories or default to given depth parameter
-const getMaxDepth = (depth, subcategories) =>
+const getMaxDepth = (depth: number, subcategories: number[]) =>
   subcategories.length ? Math.max(...subcategories) : depth;
-const createArray = length =>
+const createArray = (length: number) =>
   [...Array(length)].fill(null).map((_, i) => i + 1);
 
 /**
@@ -41,13 +77,15 @@ const createArray = length =>
  * @param {Array} categories config from listing-categories.json asset
  * @returns object-literal containing fixed key and array of extended data keys used with nested categories.
  */
-const getBuiltInCategorySpecs = (categories = []) => {
+const getBuiltInCategorySpecs = (categories: CategoryNode[] = []) => {
   // Don't change! The search schema is fixed to categoryLevel1, categoryLevel2, categoryLevel3
   const key = 'categoryLevel';
   const maxDepth = depthFirstSearch({ subcategories: categories }, getMaxDepth);
-  const categoryLevelKeys = createArray(maxDepth).map(i => `${key}${i}`);
+  const categoryLevelKeys = createArray(maxDepth).map(
+    (i: number) => `${key}${i}`,
+  );
 
-  return { key, scope: 'public', categoryLevelKeys, categories };
+  return { key, scope: 'public' as const, categoryLevelKeys, categories };
 };
 
 /**
@@ -90,7 +128,7 @@ const hasClashWithBuiltInPublicDataKey = listingFields => {
  * @param {Object} accessControlConfig (returned by access-control.json)
  * @returns {Object} accessControl config
  */
-const validAccessControl = accessControlConfig => {
+const validAccessControl = (accessControlConfig: HostedAccessControlConfig) => {
   const accessControl = accessControlConfig || {};
   const marketplace = accessControl?.marketplace || {};
   return { ...accessControl, marketplace: { private: false, ...marketplace } };
@@ -100,7 +138,10 @@ const validAccessControl = accessControlConfig => {
 // Merge localizations //
 /////////////////////////
 
-const mergeCurrency = (hostedCurrency, defaultCurrency) => {
+const mergeCurrency = (
+  hostedCurrency: string | undefined,
+  defaultCurrency: (typeof defaultConfig)['currency'],
+) => {
   const currency = hostedCurrency || defaultCurrency;
   const supportedCurrencies = Object.keys(subUnitDivisors);
   if (supportedCurrencies.includes(currency)) {
@@ -114,10 +155,10 @@ const mergeCurrency = (hostedCurrency, defaultCurrency) => {
   }
 };
 
-const validateStripeCurrency = stripe => {
+const validateStripeCurrency = (stripe: (typeof defaultConfig)['stripe']) => {
   const supportedCountries = stripe.supportedCountries || [];
   const supportedCurrencies = Object.keys(subUnitDivisors);
-  const validSupportedCountries = supportedCountries.filter(country => {
+  const validSupportedCountries = supportedCountries.filter((country: any) => {
     const isSupported = supportedCurrencies.includes(country.currency);
 
     if (!isSupported) {
@@ -132,7 +173,10 @@ const validateStripeCurrency = stripe => {
   return { ...stripe, supportedCountries: validSupportedCountries };
 };
 
-const mergeLocalizations = (hostedLocalization, defaultLocalization) => {
+const mergeLocalizations = (
+  hostedLocalization: HostedLocalizationConfig | undefined,
+  defaultLocalization: (typeof defaultConfig)['localization'],
+) => {
   // This defaults to 'en', if no locale is set.
   const locale =
     hostedLocalization?.locale || defaultLocalization.locale || 'en';
@@ -160,8 +204,8 @@ function joinStrings(str1, str2) {
 }
 
 const mergeAnalyticsConfig = (
-  hostedAnalyticsConfig,
-  defaultAnalyticsConfig,
+  hostedAnalyticsConfig: HostedAnalyticsConfig,
+  defaultAnalyticsConfig: (typeof defaultConfig)['analytics'],
 ) => {
   const { enabled, measurementId } =
     hostedAnalyticsConfig?.googleAnalytics || {};
@@ -194,7 +238,7 @@ const mergeAnalyticsConfig = (
 // Generate darker and lighter versions of marketplace color,
 // if those values are not set by default.
 // Adjusted from https://gist.github.com/xenozauros/f6e185c8de2a04cdfecf
-const hexToCssHsl = (hexColor, lightnessDiff) => {
+const hexToCssHsl = (hexColor: string, lightnessDiff: number) => {
   let hex = hexColor.replace(/^#/, '');
   if (hex.length === 3) {
     hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
@@ -239,13 +283,19 @@ const hexToCssHsl = (hexColor, lightnessDiff) => {
   return `hsl(${h}, ${s}%, ${l + lightnessDiff}%)`;
 };
 
-const getVariantURL = (socialSharingImage, variantName) => {
+const getVariantURL = (
+  socialSharingImage: ImageAsset | undefined,
+  variantName: string,
+) => {
   return socialSharingImage?.type === 'imageAsset'
     ? socialSharingImage.attributes.variants[variantName]?.url
     : null;
 };
 
-const mergeBranding = (brandingConfig, defaultBranding) => {
+const mergeBranding = (
+  brandingConfig: BrandingConfigType | undefined,
+  defaultBranding: (typeof defaultConfig)['branding'],
+) => {
   const {
     marketplaceColors,
     logo,
@@ -339,7 +389,10 @@ const validVariantConfig = (
   return isValidVariant ? variant : fallback;
 };
 
-const mergeLayouts = (layoutConfig, defaultLayout) => {
+const mergeLayouts = (
+  layoutConfig: LayoutAssetData,
+  defaultLayout: (typeof defaultConfig)['layout'],
+) => {
   const searchPage = validVariantConfig(
     layoutConfig?.searchPage,
     defaultLayout?.searchPage,
@@ -921,7 +974,8 @@ const validListingFields = (
   }, []);
 };
 
-const validUserTypes = userTypes => {
+//need to handle the union types , default is hostedUserTypes
+const validUserTypes = (userTypes: ReturnType<typeof restructureUserTypes>) => {
   const validTypes = userTypes.filter(config => {
     const { userType, label } = config;
     return userType && label;
@@ -1091,7 +1145,9 @@ export const isPriceVariationsEnabled = (publicData, listingTypeConfig) => {
 // Restructure hosted listing config //
 ///////////////////////////////////////
 
-const restructureListingTypes = hostedListingTypes => {
+const restructureListingTypes = (
+  hostedListingTypes: ListingType[] | undefined,
+) => {
   return (
     hostedListingTypes?.map(listingType => {
       const { id, label, transactionProcess, unitType, ...rest } = listingType;
@@ -1111,7 +1167,7 @@ const restructureListingTypes = hostedListingTypes => {
   );
 };
 
-const restructureListingFields = hostedListingFields => {
+const restructureListingFields = (hostedListingFields: ListingFields) => {
   return (
     hostedListingFields?.map(listingField => {
       const {
@@ -1166,14 +1222,14 @@ const restructureListingFields = hostedListingFields => {
 // Restructure hosted user config //
 ///////////////////////////////////////
 
-const restructureUserTypes = (hostedUserTypes = []) => {
+const restructureUserTypes = (hostedUserTypes: hostedUserTypesTypes) => {
   return hostedUserTypes.map(userType => {
     const { id, ...rest } = userType;
     return { userType: id, ...rest };
   });
 };
 
-const restructureUserFields = hostedUserFields => {
+const restructureUserFields = (hostedUserFields: hostedUserFieldsTypes) => {
   return (
     hostedUserFields?.map(userField => {
       const {
@@ -1246,9 +1302,9 @@ const restructureUserFields = hostedUserFields => {
 //   ],
 // }
 const validateCategoryConfig = (
-  hostedConfig: Exclude<AssetSliceData['hostedConfig'], undefined>['categories'] | undefined,
+  hostedConfig: HostedCategoriesConfig | undefined,
 ) => {
-  const validateData = (data: Exclude<AssetSliceData['hostedConfig'], undefined>['categories'] | undefined) => {
+  const validateData = (data: HostedCategoriesConfig | undefined) => {
     if (!data || !data.categories || !Array.isArray(data.categories)) {
       return {};
     }
@@ -1294,13 +1350,17 @@ const union = (arr1, arr2, key) => {
 // For debugging, it becomes sometimes important to be able to merge and overwrite with local values
 // Note: We don't want to expose this to production by default.
 //       If you customization relies on multiple listing types or custom listing fields, you need to change this.
-const mergeDefaultTypesAndFieldsForDebugging = isDebugging => {
-  const isDev = process.env.NODE_ENV === 'development';
+const mergeDefaultTypesAndFieldsForDebugging = (isDebugging: boolean) => {
+  const isDev = ENV.APP_ENV === 'development';
   return isDebugging && isDev;
 };
 
 // Note: by default, listing types and fields are only merged if explicitly set for debugging
-const mergeListingConfig = (hostedConfig, defaultConfigs, categoriesInUse) => {
+const mergeListingConfig = (
+  hostedConfig: HostedConfigType,
+  defaultConfigs: typeof defaultConfig,
+  categoriesInUse: ReturnType<typeof validateCategoryConfig>,
+) => {
   // Listing configuration is splitted to several assets in Console
   const hostedListingTypes = restructureListingTypes(
     hostedConfig.listingTypes?.listingTypes,
@@ -1340,7 +1400,10 @@ const mergeListingConfig = (hostedConfig, defaultConfigs, categoriesInUse) => {
   };
 };
 
-const mergeUserConfig = (hostedConfig, defaultConfigs) => {
+const mergeUserConfig = (
+  hostedConfig: HostedConfigType,
+  defaultConfigs: typeof defaultConfig,
+) => {
   const hostedUserTypes = restructureUserTypes(
     hostedConfig?.userTypes?.userTypes,
   );
@@ -1618,7 +1681,7 @@ const mergeSearchConfig = (
 // Validate transaction configs //
 //////////////////////////////////
 
-const getListingMinimumPrice = transactionSize => {
+const getListingMinimumPrice = (transactionSize: TransactionSizeConfig) => {
   const { listingMinimumPrice } = transactionSize || {};
   return listingMinimumPrice?.type === 'subunit'
     ? listingMinimumPrice.amount
@@ -1628,7 +1691,10 @@ const getListingMinimumPrice = transactionSize => {
 ////////////////////////////////////
 // Validate and merge map configs //
 ////////////////////////////////////
-const mergeMapConfig = (hostedMapConfig, defaultMapConfig) => {
+const mergeMapConfig = (
+  hostedMapConfig: HostedMapsConfig,
+  defaultMapConfig: (typeof defaultConfig)['maps'],
+) => {
   const { mapProvider, mapboxAccessToken, googleMapsAPIKey, ...restOfDefault } =
     defaultMapConfig;
   const mapProviderPicked = hostedMapConfig?.provider || mapProvider;
@@ -1660,7 +1726,7 @@ const mergeMapConfig = (hostedMapConfig, defaultMapConfig) => {
 ////////////////////////////////////
 
 // Check if all the mandatory info have been retrieved from hosted assets
-const hasMandatoryConfigs = hostedConfig => {
+const hasMandatoryConfigs = (hostedConfig: HostedConfigType) => {
   const { branding, listingTypes, listingFields, transactionSize } =
     hostedConfig;
   printErrorIfHostedAssetIsMissing({
@@ -1679,7 +1745,7 @@ const hasMandatoryConfigs = hostedConfig => {
 };
 
 export const mergeConfig = (
-  configAsset: AssetSliceData['hostedConfig'] = {} as AssetSliceData['hostedConfig'],
+  configAsset: HostedConfigType = {} as HostedConfigType,
   defaultConfigs: typeof defaultConfig,
 ) => {
   // Remove trailing slash from marketplaceRootURL if any
@@ -1699,16 +1765,14 @@ export const mergeConfig = (
     getListingMinimumPrice(configAsset?.transactionSize || {}) ||
     defaultConfigs.listingMinimumPriceSubUnits;
 
-  const validHostedCategories = validateCategoryConfig(
-    configAsset?.categories,
-  );
+  const validHostedCategories = validateCategoryConfig(configAsset?.categories);
   const categoryConfiguration = getBuiltInCategorySpecs(validHostedCategories);
   const listingConfiguration = mergeListingConfig(
     configAsset,
     defaultConfigs,
     validHostedCategories,
   );
-
+  // console.log('configAsset', JSON.stringify(configAsset));
   return {
     // Use default configs as a starting point for app config.
     ...defaultConfigs,
@@ -1716,7 +1780,7 @@ export const mergeConfig = (
     marketplaceRootURL: cleanedRootURL,
 
     // AccessControl config contains a flag whether the marketplace is private.
-    accessControl: validAccessControl(configAsset.accessControl),
+    accessControl: validAccessControl(configAsset?.accessControl),
 
     // Overwrite default configs if hosted config is available
     listingMinimumPriceSubUnits,
@@ -1773,7 +1837,8 @@ export const mergeConfig = (
 
     // Google Site Verification can be given through configs.
     // Renders a meta tag: <meta name="google-site-verification" content="[token-here]>" />
-    googleSearchConsole: configAsset.googleSearchConsole?.googleSiteVerification
+    googleSearchConsole: configAsset?.googleSearchConsole
+      ?.googleSiteVerification
       ? configAsset.googleSearchConsole
       : defaultConfigs.googleSearchConsole,
 
@@ -1782,11 +1847,11 @@ export const mergeConfig = (
     // - Custom links are links specified by marketplace operator (both internal and external)
     //   - Topbar tries to fit primary links to the visible space,
     //     but secondary links are always behind dropdown menu.
-    topbar: configAsset.topbar, // defaultConfigs.topbar,
+    topbar: configAsset?.topbar, // defaultConfigs.topbar,
 
     // Include hosted footer config, if it exists
     // Note: if footer asset is not set, Footer is not rendered.
-    footer: configAsset.footer,
+    footer: configAsset?.footer,
 
     // Check if all the mandatory info have been retrieved from hosted assets
     hasMandatoryConfigurations: hasMandatoryConfigs(configAsset),
