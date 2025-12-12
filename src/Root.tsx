@@ -4,7 +4,8 @@ import { colors, mergeColors } from './constants';
 import { ConfigurationProvider } from './context/configurationContext';
 import { fetchAppAssets } from './redux/slices/hostedAssets.slice';
 import { store } from './redux/store';
-
+import { hideSplash } from 'react-native-splash-view';
+import { authInfo } from './redux/slices/auth.slice';
 interface AppConfig {
   appConfig: any;
   colors: any;
@@ -45,6 +46,9 @@ const Root = () => {
 
   useEffect(() => {
     initializeApp();
+    setTimeout(() => {
+      hideSplash();
+    }, 5000);
   }, [initializeApp]);
 
   return (
