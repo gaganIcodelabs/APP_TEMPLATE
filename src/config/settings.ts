@@ -1,5 +1,9 @@
-import { ENV } from '../constants';
-import { subUnitDivisors, currencyFormatting, stripeSupportedCurrencies } from './settingsCurrency';
+import { ENV } from '@constants/env';
+import {
+  subUnitDivisors,
+  currencyFormatting,
+  stripeSupportedCurrencies,
+} from './settingsCurrency';
 
 // NOTE: only expose configuration that should be visible in the
 // client side, don't add any server secrets in this file.

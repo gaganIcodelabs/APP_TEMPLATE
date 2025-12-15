@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import defaultConfig from '../config/configDefault';
-import { subUnitDivisors } from '../config/settingsCurrency';
-import { ENV } from '../constants';
-import { AssetsThunkResponse } from '../redux/slices/hostedAssets.slice';
+import { subUnitDivisors } from '@config/settingsCurrency';
+import defaultConfig from '@config/configDefault';
+import { ENV } from '@constants/env';
+import { AssetsThunkResponse } from '@redux/slices/hostedAssets.slice';
 import {
   getSupportedProcessesInfo,
   isBookingProcessAlias,
-} from '../transactions/transaction';
-import { ImageAsset } from '../types';
-import { Assets } from '../types/api/assets.types';
+} from '@transactions/transaction';
+import { ImageAsset } from '@appTypes/index';
+import { Assets } from '@appTypes/api/assets.types';
 import {
   CategoryNode,
   LayoutAssetData,
@@ -28,7 +28,7 @@ import {
   ListingTypeConfig,
   EnumOption,
   TransactionType,
-} from '../types/config';
+} from '@appTypes/config';
 
 // Generic helpers for validating config values
 
@@ -1763,7 +1763,11 @@ const mergeUserConfig = (
     ? union(hostedUserTypes, defaultUserTypes, 'userType')
     : hostedUserTypes;
   const userFields = shouldMerge
-    ? union(hostedUserFields.filter(itm => itm !== null), defaultUserFields as any, 'key')
+    ? union(
+        hostedUserFields.filter(itm => itm !== null),
+        defaultUserFields as any,
+        'key',
+      )
     : hostedUserFields;
 
   // To include user type validation (if you have user types in your default configuration),
@@ -1771,7 +1775,10 @@ const mergeUserConfig = (
   const userTypesInUse = userTypes.map(ut => `${ut.userType}`);
   return {
     userTypes: validUserTypes(userTypes),
-    userFields: validUserFields(userFields.filter(itm => itm !== null), userTypesInUse),
+    userFields: validUserFields(
+      userFields.filter(itm => itm !== null),
+      userTypesInUse,
+    ),
   };
 };
 

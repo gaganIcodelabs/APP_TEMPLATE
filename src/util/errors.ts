@@ -31,8 +31,14 @@ import {
   ERROR_CODE_USER_PENDING_APPROVAL,
   ERROR_CODE_PERMISSION_DENIED_INITIATE_TRANSACTIONS,
   ERROR_CODE_PERMISSION_DENIED_READ,
-} from '../constants';
-import { ApiErrorDetail, ApiErrorResponse, StorableError } from '../types/api/api.types';
+} from '@constants/errorCodes';
+
+import {
+  ApiErrorDetail,
+  ApiErrorResponse,
+  StorableError,
+} from '@appTypes/index';
+
 // NOTE: This file imports types.js, which may lead to circular dependency
 
 /**
@@ -45,14 +51,19 @@ const errorAPIErrors = (error: StorableError | null | undefined) => {
 /**
  * Check if error has a specific error code
  */
-const hasErrorWithCode = (error: StorableError | null | undefined, code: string): boolean => {
+const hasErrorWithCode = (
+  error: StorableError | null | undefined,
+  code: string,
+): boolean => {
   return errorAPIErrors(error).some(apiError => apiError.code === code);
 };
 
 /**
  * Extract API errors from error.data.errors (response format)
  */
-const responseAPIErrors = (error: ApiErrorResponse | null | undefined): ApiErrorDetail[] => {
+const responseAPIErrors = (
+  error: ApiErrorResponse | null | undefined,
+): ApiErrorDetail[] => {
   return error && error.data && error.data.errors ? error.data.errors : [];
 };
 
@@ -63,20 +74,23 @@ const responseAPIErrors = (error: ApiErrorResponse | null | undefined): ApiError
 /**
  * 403 Forbidden
  */
-export const isForbiddenError = (error: StorableError | null | undefined): boolean =>
-  hasErrorWithCode(error, ERROR_CODE_FORBIDDEN);
+export const isForbiddenError = (
+  error: StorableError | null | undefined,
+): boolean => hasErrorWithCode(error, ERROR_CODE_FORBIDDEN);
 
 /**
  * 404 Not Found
  */
-export const isNotFoundError = (error: StorableError | null | undefined): boolean =>
-  hasErrorWithCode(error, ERROR_CODE_NOT_FOUND);
+export const isNotFoundError = (
+  error: StorableError | null | undefined,
+): boolean => hasErrorWithCode(error, ERROR_CODE_NOT_FOUND);
 
 /**
  * 429 Too Many Requests error
  */
-export const isTooManyRequestsError = (error: StorableError | null | undefined): boolean =>
-  !!(error && error.status === 429);
+export const isTooManyRequestsError = (
+  error: StorableError | null | undefined,
+): boolean => !!(error && error.status === 429);
 
 // ============================================================================
 // User Account Error Checks
@@ -86,29 +100,33 @@ export const isTooManyRequestsError = (error: StorableError | null | undefined):
  * Check if the given API error (from `sdk.currentuser.create()`) is
  * due to the email address already being in use.
  */
-export const isSignupEmailTakenError = (error: StorableError | null | undefined): boolean =>
-  hasErrorWithCode(error, ERROR_CODE_EMAIL_TAKEN);
+export const isSignupEmailTakenError = (
+  error: StorableError | null | undefined,
+): boolean => hasErrorWithCode(error, ERROR_CODE_EMAIL_TAKEN);
 
 /**
  * Check if the given API error (from `sdk.currentuser.changeEmail()`) is
  * due to the email address already being in use.
  */
-export const isChangeEmailTakenError = (error: StorableError | null | undefined): boolean =>
-  hasErrorWithCode(error, ERROR_CODE_EMAIL_TAKEN);
+export const isChangeEmailTakenError = (
+  error: StorableError | null | undefined,
+): boolean => hasErrorWithCode(error, ERROR_CODE_EMAIL_TAKEN);
 
 /**
  * Check if the given API error (from `sdk.currentUser.changeEmail(params)`)
  * is due to giving wrong password.
  */
-export const isChangeEmailWrongPassword = (error: StorableError | null | undefined): boolean =>
-  !!(error && error.status === 403);
+export const isChangeEmailWrongPassword = (
+  error: StorableError | null | undefined,
+): boolean => !!(error && error.status === 403);
 
 /**
  * Check if the given API error (from `sdk.currentUser.changePassword(params)`)
  * is due to giving wrong password.
  */
-export const isChangePasswordWrongPassword = (error: StorableError | null | undefined): boolean =>
-  !!(error && error.status === 403);
+export const isChangePasswordWrongPassword = (
+  error: StorableError | null | undefined,
+): boolean => !!(error && error.status === 403);
 
 /**
  * Check if the given API error (from
@@ -120,15 +138,16 @@ export const isChangePasswordWrongPassword = (error: StorableError | null | unde
  * request sending new verification emails.
  */
 export const isTooManyEmailVerificationRequestsError = (
-  error: StorableError | null | undefined
-): boolean => hasErrorWithCode(error, ERROR_CODE_TOO_MANY_VERIFICATION_REQUESTS);
+  error: StorableError | null | undefined,
+): boolean =>
+  hasErrorWithCode(error, ERROR_CODE_TOO_MANY_VERIFICATION_REQUESTS);
 
 /**
  * Check if the given API error (from `sdk.passwordReset.request()`)
  * is due to no user having the given email address.
  */
 export const isPasswordRecoveryEmailNotFoundError = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean => hasErrorWithCode(error, ERROR_CODE_EMAIL_NOT_FOUND);
 
 // ============================================================================
@@ -140,8 +159,9 @@ export const isPasswordRecoveryEmailNotFoundError = (
  * `sdk.images.upload()`) is due to the image being over
  * the size limit.
  */
-export const isUploadImageOverLimitError = (error: StorableError | null | undefined): boolean =>
-  hasErrorWithCode(error, ERROR_CODE_UPLOAD_OVER_LIMIT);
+export const isUploadImageOverLimitError = (
+  error: StorableError | null | undefined,
+): boolean => hasErrorWithCode(error, ERROR_CODE_UPLOAD_OVER_LIMIT);
 
 // ============================================================================
 // Stock Management Error Checks
@@ -151,8 +171,9 @@ export const isUploadImageOverLimitError = (error: StorableError | null | undefi
  * Check if the given API error (from
  * `sdk.stock.compareAndSet()`) is due to the oldTotal being wrong.
  */
-export const isOldTotalMismatchStockError = (error: StorableError | null | undefined): boolean =>
-  hasErrorWithCode(error, ERROR_CODE_STOCK_OLD_TOTAL_MISMATCH);
+export const isOldTotalMismatchStockError = (
+  error: StorableError | null | undefined,
+): boolean => hasErrorWithCode(error, ERROR_CODE_STOCK_OLD_TOTAL_MISMATCH);
 
 // ============================================================================
 // Transaction Initiation Error Checks
@@ -164,7 +185,7 @@ export const isOldTotalMismatchStockError = (error: StorableError | null | undef
  * being closed or deleted.
  */
 export const isTransactionInitiateListingNotFoundError = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean => hasErrorWithCode(error, ERROR_CODE_TRANSACTION_LISTING_NOT_FOUND);
 
 /**
@@ -173,7 +194,7 @@ export const isTransactionInitiateListingNotFoundError = (
  * connection from the listing author.
  */
 export const isTransactionInitiateMissingStripeAccountError = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean => hasErrorWithCode(error, ERROR_CODE_MISSING_STRIPE_ACCOUNT);
 
 /**
@@ -182,23 +203,25 @@ export const isTransactionInitiateMissingStripeAccountError = (
  * time already being booked.
  */
 export const isTransactionInitiateBookingTimeNotAvailableError = (
-  error: StorableError | null | undefined
-): boolean => hasErrorWithCode(error, ERROR_CODE_TRANSACTION_BOOKING_TIME_NOT_AVAILABLE);
+  error: StorableError | null | undefined,
+): boolean =>
+  hasErrorWithCode(error, ERROR_CODE_TRANSACTION_BOOKING_TIME_NOT_AVAILABLE);
 
 /**
  * Check if the given API error (from `sdk.transaction.initiate()` or
  * `sdk.transaction.initiateSpeculative()`) is due to insufficient stock.
  */
 export const isTransactionInitiateListingInsufficientStockError = (
-  error: StorableError | null | undefined
-): boolean => hasErrorWithCode(error, ERROR_CODE_TRANSACTION_LISTING_INSUFFICIENT_STOCK);
+  error: StorableError | null | undefined,
+): boolean =>
+  hasErrorWithCode(error, ERROR_CODE_TRANSACTION_LISTING_INSUFFICIENT_STOCK);
 
 /**
  * Check if the given API error (from `sdk.transaction.initiate()` or
  * `sdk.transaction.initiateSpeculative()`) is due to payment being zero.
  */
 export const isTransactionZeroPaymentError = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean => hasErrorWithCode(error, ERROR_CODE_CHARGE_ZERO_PAYIN);
 
 /**
@@ -206,7 +229,7 @@ export const isTransactionZeroPaymentError = (
  * due to the transaction total amount being too low for Stripe.
  */
 export const isTransactionInitiateAmountTooLowError = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean => {
   const isZeroPayment = isTransactionZeroPaymentError(error);
 
@@ -239,7 +262,7 @@ export const isTransactionInitiateAmountTooLowError = (
  * due to the transaction charge creation disabled by Stripe.
  */
 export const isTransactionChargeDisabledError = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean => {
   const chargeCreationDisabled = errorAPIErrors(error).some(apiError => {
     const isPaymentFailedError =
@@ -268,13 +291,13 @@ export const isTransactionChargeDisabledError = (
  * due to other error in Stripe.
  */
 export const transactionInitiateOrderStripeErrors = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): string[] | null => {
   if (error) {
     return errorAPIErrors(error).reduce((messages: string[], apiError) => {
       const isPaymentFailedError =
         apiError.status === 402 && apiError.code === ERROR_CODE_PAYMENT_FAILED;
-      const hasStripeError = !!(apiError.meta?.stripeMessage);
+      const hasStripeError = !!apiError.meta?.stripeMessage;
       const stripeMessageMaybe =
         isPaymentFailedError && hasStripeError && apiError.meta?.stripeMessage
           ? [apiError.meta?.stripeMessage]
@@ -294,7 +317,7 @@ export const transactionInitiateOrderStripeErrors = (
  * is due to invalid transition attempt.
  */
 export const isTransactionsTransitionInvalidTransition = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean =>
   !!(
     error &&
@@ -307,13 +330,19 @@ export const isTransactionsTransitionInvalidTransition = (
  * is due to already sent review.
  */
 export const isTransactionsTransitionAlreadyReviewed = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean =>
   !!(
     error &&
     error.status === 409 &&
-    (hasErrorWithCode(error, ERROR_CODE_TRANSACTION_ALREADY_REVIEWED_BY_CUSTOMER) ||
-      hasErrorWithCode(error, ERROR_CODE_TRANSACTION_ALREADY_REVIEWED_BY_PROVIDER))
+    (hasErrorWithCode(
+      error,
+      ERROR_CODE_TRANSACTION_ALREADY_REVIEWED_BY_CUSTOMER,
+    ) ||
+      hasErrorWithCode(
+        error,
+        ERROR_CODE_TRANSACTION_ALREADY_REVIEWED_BY_PROVIDER,
+      ))
   );
 
 /**
@@ -321,11 +350,13 @@ export const isTransactionsTransitionAlreadyReviewed = (
  * due to no quantity information in the transition params.
  */
 export const isTransitionQuantityInfoMissingError = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean =>
   !!(
     error?.status === 400 &&
-    error?.statusText?.startsWith('Error: transition should contain quantity information')
+    error?.statusText?.startsWith(
+      'Error: transition should contain quantity information',
+    )
   );
 
 // ============================================================================
@@ -337,7 +368,7 @@ export const isTransitionQuantityInfoMissingError = (
  * is due to denied permission to post listings.
  */
 export const isErrorNoPermissionToPostListings = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean =>
   !!(
     error &&
@@ -350,7 +381,7 @@ export const isErrorNoPermissionToPostListings = (
  * is due to denied permission for users in pending-approval state.
  */
 export const isErrorNoPermissionForUserPendingApproval = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean =>
   !!(
     error &&
@@ -362,7 +393,9 @@ export const isErrorNoPermissionForUserPendingApproval = (
  * Check if the given API error (from `sdk.listings.query(params)`
  * is due to denied permission for users in pending-approval state.
  */
-export const isErrorUserPendingApproval = (error: StorableError | null | undefined): boolean =>
+export const isErrorUserPendingApproval = (
+  error: StorableError | null | undefined,
+): boolean =>
   !!(
     error &&
     error.status === 403 &&
@@ -374,7 +407,7 @@ export const isErrorUserPendingApproval = (error: StorableError | null | undefin
  * is due to denied permission to initiate transactions.
  */
 export const isErrorNoPermissionForInitiateTransactions = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean =>
   !!(
     error &&
@@ -386,7 +419,9 @@ export const isErrorNoPermissionForInitiateTransactions = (
  * Check if the given API error (from `sdk.transactions.initiate(params)`
  * is due to denied permission to view marketplace data.
  */
-export const isErrorNoViewingPermission = (error: StorableError | null | undefined): boolean => {
+export const isErrorNoViewingPermission = (
+  error: StorableError | null | undefined,
+): boolean => {
   return !!(
     error &&
     error.status === 403 &&
@@ -403,7 +438,9 @@ export const isErrorNoViewingPermission = (error: StorableError | null | undefin
  * 'sdk.stripeAccount.create(payoutDetails)') is due to
  * invalid postal code in the given country.
  */
-export const isStripeInvalidPostalCode = (error: StorableError | null | undefined): boolean => {
+export const isStripeInvalidPostalCode = (
+  error: StorableError | null | undefined,
+): boolean => {
   const msgRe = /^Invalid [A-Z]{2} postal code$/;
   return errorAPIErrors(error).some(apiError => {
     // Stripe doesn't seem to give an error code for this specific
@@ -416,11 +453,13 @@ export const isStripeInvalidPostalCode = (error: StorableError | null | undefine
 /**
  * Check if the error contains a Stripe error message
  */
-export const isStripeError = (error: StorableError | null | undefined): boolean => {
+export const isStripeError = (
+  error: StorableError | null | undefined,
+): boolean => {
   return errorAPIErrors(error).some(apiError => {
     // Stripe doesn't seem to give an error code for this specific
     // case, so we have to recognize it from the message.
-    return !!((apiError as any)?.meta?.stripeMessage);
+    return !!(apiError as any)?.meta?.stripeMessage;
   });
 };
 
@@ -429,11 +468,13 @@ export const isStripeError = (error: StorableError | null | undefined): boolean 
  * user's Stripe Connect account has a non-zero balance.
  */
 export const isStripeDeletionFailedNonZeroBalance = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean => {
   return !!(
     error?.status === 400 &&
-    errorAPIErrors(error).some(apiError => apiError.code === 'delete-stripe-account-failed')
+    errorAPIErrors(error).some(
+      apiError => apiError.code === 'delete-stripe-account-failed',
+    )
   );
 };
 
@@ -446,12 +487,12 @@ export const isStripeDeletionFailedNonZeroBalance = (
  * minimum price set for the listing.
  */
 export const isProviderCommissionBiggerThanMinPrice = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean =>
   !!(
     error?.status === 400 &&
     error?.statusText?.startsWith(
-      'Minimum commission amount is greater than the amount of money paid in'
+      'Minimum commission amount is greater than the amount of money paid in',
     )
   );
 
@@ -464,12 +505,12 @@ export const isProviderCommissionBiggerThanMinPrice = (
  * processing actions.
  */
 export const isErrorUserHasUnfinishedTransactions = (
-  error: StorableError | null | undefined
+  error: StorableError | null | undefined,
 ): boolean => {
   return !!(
     error?.status === 409 &&
     error?.statusText?.startsWith(
-      'User has transactions on states that include incomplete payment processing'
+      'User has transactions on states that include incomplete payment processing',
     )
   );
 };
@@ -482,7 +523,9 @@ export const isErrorUserHasUnfinishedTransactions = (
  * Convert an error to a storable format (for Redux/state management)
  * Returned object is safe to serialize to JSON
  */
-export const storableError = (err: ApiErrorResponse | null | undefined): StorableError => {
+export const storableError = (
+  err: ApiErrorResponse | null | undefined,
+): StorableError => {
   const error = err || ({} as ApiErrorResponse);
   const { name, message, status, statusText } = error;
   // Status, statusText, and data.errors are (possibly) added to the error object by SDK

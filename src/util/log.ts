@@ -7,8 +7,8 @@
  *
  */
 
-import appSettings from '../config/settings';
-import { ApiErrorResponse } from '../types/api/api.types';
+import appSettings from '@config/settings';
+import { ApiErrorResponse } from '@appTypes/index';
 
 const ingoreErrorsMap = {
   ['ResizeObserver loop limit exceeded']: true, // Some exotic browsers seems to emit these.

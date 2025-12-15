@@ -2,7 +2,7 @@
 // This file contains configs that add analytics integrations     //
 ////////////////////////////////////////////////////////////////////
 
-import { ENV } from '../constants';
+import { ENV } from '@constants/env';
 
 // Note: These come from the analytics asset nowadays by default.
 //       To use this built-in configuration, you need to remove the overwrite from configHelper.js (mergeAnalyticsConfig func)

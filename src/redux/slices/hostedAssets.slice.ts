@@ -4,9 +4,9 @@ import {
   createSlice,
   PayloadAction,
 } from '@reduxjs/toolkit';
-import defaultConfig from '../../config/configDefault';
-import { StorableError } from '../../types/api/api.types';
-import { Assets, TranslationAssetData } from '../../types/api/assets.types';
+import { mergeConfig } from '@util/configHelpers';
+import { denormalizeAssetData } from '@util/data';
+import { storableError } from '@util/errors';
 import {
   AccessControlConfig,
   AnalyticsConfig,
@@ -20,10 +20,11 @@ import {
   TransactionSizeConfig,
   UserFieldConfigItem,
   UserTypeConfigItem,
-} from '../../types/config';
-import { denormalizeAssetData, mergeConfig, storableError } from '../../util';
-import * as log from '../../util/log';
-import { RootState } from '../store';
+} from '@appTypes/config';
+import { Assets, StorableError, TranslationAssetData } from '@appTypes/index';
+import defaultConfig from '@config/configDefault';
+import { RootState } from '@redux/store';
+import * as log from '@util/log';
 
 interface Thunk {
   state: RootState;
@@ -296,6 +297,11 @@ const assetsState = (state: RootState) => state.hostedAssets;
 export const hostedConfigSelector = createSelector(
   [assetsState],
   state => state.hostedConfig,
+);
+
+export const appConfigSelector = createSelector(
+  [assetsState],
+  state => state.appConfig || null,
 );
 
 export const hostedTranslationsSelector = createSelector(

@@ -1,6 +1,6 @@
 // // Basic configuration for React Native app
 // // This mimics the web template structure but simplified for mobile
-import { ENV } from '../constants';
+import { ENV } from '@constants/env';
 
 import * as stripe from './configStripe';
 import * as search from './configSearch';

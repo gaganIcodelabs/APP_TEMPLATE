@@ -1,6 +1,23 @@
 {
   "compilerOptions": {
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": "./src",
+    "paths": {
+      // "@assets/*": ["assets/*"],
+      // "@components/*": ["components/*"],
+      "@config/*": ["config/*"],
+      "@constants/*": ["constants/*"],
+      "@context/*": ["context/*"],
+      // "@hooks/*": ["hooks/*"],
+      // "@locales/*": ["locales/*"],
+      // "@navigation/*": ["navigation/*"],
+      "@redux/*": ["redux/*"],
+      // "@screens/*": ["screens/*"],
+      // "@scripts/*": ["scripts/*"],
+      "@transactions/*": ["transactions/*"],
+      "@appTypes/*": ["types/*"],
+      "@util/*": ["util/*"]
+    }
   },
   "extends": "@react-native/typescript-config",
   "include": ["**/*.ts", "**/*.tsx"],

@@ -5,9 +5,9 @@ import axios, {
   AxiosResponse,
 } from 'axios';
 import Decimal from 'decimal.js';
-import appSettings from '../config/settings';
-import { ENV } from '../constants';
-import { ApiErrorData } from '../types/api/api.types';
+import appSettings from '@config/settings';
+import { ENV } from '@constants/env';
+import { ApiErrorData } from '@appTypes/index';
 import { types as sdkTypes, transit } from './sdkLoader';
 
 /**

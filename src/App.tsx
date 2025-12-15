@@ -1,7 +1,7 @@
 import Root from './Root';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
-import { store } from './redux/store';
+import { store } from '@redux/store';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const App = () => {

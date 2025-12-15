@@ -5,7 +5,7 @@ This variable is set in a hidden file: .env
 To make Stripe connection work, you also need to set Stripe's private key in the Sharetribe Console.
 */
 
-import { ENV } from '../constants';
+import { ENV } from '@constants/env';
 
 export const publishableKey = ENV.STRIPE_PUBLISHABLE_KEY;
 
