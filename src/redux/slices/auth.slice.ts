@@ -1,16 +1,14 @@
+import { Thunk } from '@appTypes/index';
 import {
-  createSlice,
   createAsyncThunk,
   createSelector,
+  createSlice,
 } from '@reduxjs/toolkit';
-import { AuthInfo } from '../../types/auth';
-import { AppDispatch, RootState } from '../store';
-import * as log from '../../util/log';
-import { ApiErrorResponse } from '../../types/api/api.types';
-import { storableError } from '../../util';
-import { Thunk } from '@appTypes/index';
-import { fetchCurrentUser } from './user.slice';
 import { hideSplash } from 'react-native-splash-view';
+import { AuthInfo } from '../../types/auth';
+import { storableError } from '../../util';
+import { RootState } from '../store';
+import { fetchCurrentUser } from './user.slice';
 
 const authenticated = (authInfo: AuthInfo) => authInfo?.isAnonymous === false;
 const loggedInAs = (authInfo: AuthInfo) => authInfo?.isLoggedInAs === true;
@@ -30,10 +28,6 @@ const initialState = {
   authInfoLoaded: false,
   authInfoInProgress: false,
   authInfoError: null as any,
-
-  // navigation state
-  shouldShowAuthNavigator: false,
-  shouldShowAppNavigator: false,
 
   // login
   loginError: null as any,
@@ -279,10 +273,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    resetNavigationState: state => {
-      state.shouldShowAuthNavigator = false;
-      state.shouldShowAppNavigator = false;
-    },
+    resetNavigationState: () => {},
   },
   extraReducers: builder => {
     // Auth Info Main Flow
@@ -290,8 +281,6 @@ const authSlice = createSlice({
       .addCase(fetchAuthenticationState.pending, state => {
         state.authInfoInProgress = true;
         state.authInfoError = null;
-        state.shouldShowAuthNavigator = false;
-        state.shouldShowAppNavigator = false;
       })
       .addCase(fetchAuthenticationState.fulfilled, (state, action) => {
         const payload = action.payload;
@@ -304,21 +293,11 @@ const authSlice = createSlice({
         state.isAuthenticated = isAuth;
         state.isLoggedInAs = loggedInAs(payload);
         state.authScopes = payload?.scopes || [];
-
-        // Set navigation state
-        if (isAuth) {
-          state.shouldShowAppNavigator = true;
-        } else {
-          state.shouldShowAuthNavigator = true;
-        }
       })
       .addCase(fetchAuthenticationState.rejected, (state, action) => {
         state.authInfoInProgress = false;
         state.authInfoError = action.payload;
         state.isAuthenticated = false;
-
-        // Always show AuthNavigator on rejection (banned/deleted/invalid token)
-        state.shouldShowAuthNavigator = true;
       });
     // // Login
     // builder
@@ -400,10 +379,6 @@ export const isAuthenticatedSelector = createSelector(
 export const selectAuthState = (state: RootState) => state.auth;
 export const selectIsAuthenticated = (state: RootState) =>
   state.auth.isAuthenticated;
-export const selectShouldShowAuthNavigator = (state: RootState) =>
-  state.auth.shouldShowAuthNavigator;
-export const selectShouldShowAppNavigator = (state: RootState) =>
-  state.auth.shouldShowAppNavigator;
 
 export const selectAuthInfoInProgress = (state: RootState) =>
   state.auth.authInfoInProgress;
