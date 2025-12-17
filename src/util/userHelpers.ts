@@ -1,5 +1,13 @@
-import { EXTENDED_DATA_SCHEMA_TYPES } from '../constants';
-import { getFieldValue } from '../util/fieldHelpers';
+import { EXTENDED_DATA_SCHEMA_TYPES } from '@constants/schemaTypes';
+import { getFieldValue } from './fieldHelpers';
+import {
+  CustomUserFieldInputProps,
+  UserFieldConfigItem,
+} from '@appTypes/config';
+
+interface PickedFields {
+  [key: string]: any; // This can be adjusted based on expected field types
+}
 
 /**
  * Get the namespaced attribute key based on the specified extended data scope and attribute key
@@ -7,7 +15,10 @@ import { getFieldValue } from '../util/fieldHelpers';
  * @param {*} key attribute key in extended data
  * @returns a string containing the namespace prefix and the attribute name
  */
-export const addScopePrefix = (scope: 'private' | 'protected' | 'public' | 'meta', key: string) => {
+export const addScopePrefix = (
+  scope: 'private' | 'protected' | 'public' | 'meta',
+  key: string,
+) => {
   const scopeFnMap = {
     private: (k: string) => `priv_${k}`,
     protected: (k: string) => `prot_${k}`,
@@ -37,26 +48,36 @@ export const addScopePrefix = (scope: 'private' | 'protected' | 'public' | 'meta
  * @param {Object} userFieldConfigs Extended data configurations for user fields.
  * @returns Array of picked extended data fields from submitted data.
  */
-export const pickUserFieldsData = (data, targetScope, targetUserType, userFieldConfigs) => {
-  return userFieldConfigs.reduce((fields, field) => {
-    const { key, userTypeConfig, scope = 'public', schemaType } = field || {};
-    const namespacedKey = addScopePrefix(scope, key);
 
-    const isKnownSchemaType = EXTENDED_DATA_SCHEMA_TYPES.includes(schemaType);
-    const isTargetScope = scope === targetScope;
-    const isTargetUserType =
-      !userTypeConfig.limitToUserTypeIds || userTypeConfig.userTypeIds.includes(targetUserType);
+export const pickUserFieldsData = (
+  data: any, // Data to extract fields from
+  targetScope: 'public' | 'private' | 'protected',
+  targetUserType: string,
+  userFieldConfigs: UserFieldConfigItem[], // Array of user field configurations
+): PickedFields => {
+  return userFieldConfigs.reduce(
+    (fields: PickedFields, field: UserFieldConfigItem) => {
+      const { key, userTypeConfig, scope = 'public', schemaType } = field || {};
+      const namespacedKey = addScopePrefix(scope, key);
 
-    if (isKnownSchemaType && isTargetScope && isTargetUserType) {
-      const fieldValue = getFieldValue(data, namespacedKey);
-      return { ...fields, [key]: fieldValue };
-    } else if (isKnownSchemaType && isTargetScope && !isTargetUserType) {
-      // Note: this clears extra custom fields
-      // These might exists if user swaps between user types before saving the user.
-      return { ...fields, [key]: null };
-    }
-    return fields;
-  }, {});
+      const isKnownSchemaType = EXTENDED_DATA_SCHEMA_TYPES.includes(schemaType);
+      const isTargetScope = scope === targetScope;
+      const isTargetUserType =
+        !userTypeConfig?.limitToUserTypeIds ||
+        (userTypeConfig?.userTypeIds || []).includes(targetUserType);
+
+      if (isKnownSchemaType && isTargetScope && isTargetUserType) {
+        const fieldValue = getFieldValue(data, namespacedKey);
+        return { ...fields, [key]: fieldValue };
+      } else if (isKnownSchemaType && isTargetScope && !isTargetUserType) {
+        // Note: this clears extra custom fields
+        // These might exists if user swaps between user types before saving the user.
+        return { ...fields, [key]: null };
+      }
+      return fields;
+    },
+    {},
+  );
 };
 
 /**
@@ -71,7 +92,12 @@ export const pickUserFieldsData = (data, targetScope, targetUserType, userFieldC
  * @param {Object} userFieldConfigs Extended data configurations for user fields.
  * @returns Array of picked extended data fields
  */
-export const initialValuesForUserFields = (data, targetScope, targetUserType, userFieldConfigs) => {
+export const initialValuesForUserFields = (
+  data: any, // here the user's publicData || protectedData or privateData is added
+  targetScope: 'public' | 'private' | 'protected',
+  targetUserType: string,
+  userFieldConfigs: UserFieldConfigItem[],
+) => {
   return userFieldConfigs.reduce((fields, field) => {
     const { key, userTypeConfig, scope = 'public', schemaType } = field || {};
     const namespacedKey = addScopePrefix(scope, key);
@@ -79,7 +105,8 @@ export const initialValuesForUserFields = (data, targetScope, targetUserType, us
     const isKnownSchemaType = EXTENDED_DATA_SCHEMA_TYPES.includes(schemaType);
     const isTargetScope = scope === targetScope;
     const isTargetUserType =
-      !userTypeConfig?.limitToUserTypeIds || userTypeConfig?.userTypeIds?.includes(targetUserType);
+      !userTypeConfig?.limitToUserTypeIds ||
+      userTypeConfig?.userTypeIds?.includes(targetUserType);
 
     if (isKnownSchemaType && isTargetScope && isTargetUserType) {
       const fieldValue = getFieldValue(data, key);
@@ -101,172 +128,186 @@ export const initialValuesForUserFields = (data, targetScope, targetUserType, us
  * fieldConfig, defaultRequiredMessage
  */
 export const getPropsForCustomUserFieldInputs = (
-  userFieldsConfig,
-  intl,
-  userType = null,
-  isSignup = true
-) => {
+  userFieldsConfig: UserFieldConfigItem[],
+  t: (key: string) => string, // Assuming t is a translation function
+  userType: string | null = null,
+  isSignup: boolean = true,
+): CustomUserFieldInputProps[] => {
   return (
-    userFieldsConfig?.reduce((pickedFields, fieldConfig) => {
-      const { key, userTypeConfig, schemaType, scope, saveConfig = {} } = fieldConfig || {};
-      const namespacedKey = addScopePrefix(scope, key);
-      const showField = isSignup ? saveConfig.displayInSignUp : true;
+    userFieldsConfig?.reduce<CustomUserFieldInputProps[]>(
+      (pickedFields, fieldConfig) => {
+        // console.log('pickedFields', pickedFields);
+        const { key, userTypeConfig, schemaType, scope, saveConfig } =
+          fieldConfig || {};
+        const namespacedKey = addScopePrefix(scope, key);
+        // const showField = isSignup ? saveConfig.displayInSignUp : true;
+        const showField = isSignup ? saveConfig?.displayInSignUp ?? true : true;
 
-      const isKnownSchemaType = EXTENDED_DATA_SCHEMA_TYPES.includes(schemaType);
-      const isTargetUserType =
-        !userTypeConfig?.limitToUserTypeIds || userTypeConfig?.userTypeIds?.includes(userType);
-      const isUserScope = ['public', 'private', 'protected'].includes(scope);
+        const isKnownSchemaType =
+          EXTENDED_DATA_SCHEMA_TYPES.includes(schemaType);
+        const isTargetUserType =
+          !userTypeConfig?.limitToUserTypeIds ||
+          userTypeConfig?.userTypeIds?.includes(userType ?? '');
+        const isUserScope = ['public', 'private', 'protected'].includes(scope);
 
-      return isKnownSchemaType && isTargetUserType && isUserScope && showField
-        ? [
-            ...pickedFields,
-            {
-              key: namespacedKey,
-              name: namespacedKey,
-              fieldConfig: fieldConfig,
-              defaultRequiredMessage: intl.formatMessage({
-                id: 'CustomExtendedDataField.required',
-              }),
-            },
-          ]
-        : pickedFields;
-    }, []) || []
+        return isKnownSchemaType && isTargetUserType && isUserScope && showField
+          ? [
+              ...pickedFields,
+              {
+                key: namespacedKey,
+                name: namespacedKey,
+                fieldConfig: fieldConfig,
+                defaultRequiredMessage: t('CustomExtendedDataField.required'),
+              },
+            ]
+          : pickedFields;
+      },
+      [],
+    ) || []
   );
 };
 
-/**
- * Check if currentUser has permission to post listings.
- * Defined in currentUser's effectivePermissionSet relationship:
- * https://www.sharetribe.com/api-reference/marketplace.html#currentuser-permissionset
- *
- * @param {Object} currentUser API entity
- * @returns {Boolean} true if currentUser has permission to post listings.
- */
-export const hasPermissionToPostListings = currentUser => {
-  if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
-    console.warn(
-      '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.'
-    );
-  }
-  return currentUser?.effectivePermissionSet?.attributes?.postListings === 'permission/allow';
-};
+// /**
+//  * Check if currentUser has permission to post listings.
+//  * Defined in currentUser's effectivePermissionSet relationship:
+//  * https://www.sharetribe.com/api-reference/marketplace.html#currentuser-permissionset
+//  *
+//  * @param {Object} currentUser API entity
+//  * @returns {Boolean} true if currentUser has permission to post listings.
+//  */
+// export const hasPermissionToPostListings = currentUser => {
+//   if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
+//     console.warn(
+//       '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.',
+//     );
+//   }
+//   return (
+//     currentUser?.effectivePermissionSet?.attributes?.postListings ===
+//     'permission/allow'
+//   );
+// };
 
-/**
- * Check if currentUser has permission to initiate transactions.
- * Defined in currentUser's effectivePermissionSet relationship:
- * https://www.sharetribe.com/api-reference/marketplace.html#currentuser-permissionset
- *
- * @param {Object} currentUser API entity
- * @returns {Boolean} true if currentUser has permission to initiate transactions.
- */
-export const hasPermissionToInitiateTransactions = currentUser => {
-  if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
-    console.warn(
-      '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.'
-    );
-  }
-  return (
-    currentUser?.effectivePermissionSet?.attributes?.initiateTransactions === 'permission/allow'
-  );
-};
+// /**
+//  * Check if currentUser has permission to initiate transactions.
+//  * Defined in currentUser's effectivePermissionSet relationship:
+//  * https://www.sharetribe.com/api-reference/marketplace.html#currentuser-permissionset
+//  *
+//  * @param {Object} currentUser API entity
+//  * @returns {Boolean} true if currentUser has permission to initiate transactions.
+//  */
+// export const hasPermissionToInitiateTransactions = currentUser => {
+//   if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
+//     console.warn(
+//       '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.',
+//     );
+//   }
+//   return (
+//     currentUser?.effectivePermissionSet?.attributes?.initiateTransactions ===
+//     'permission/allow'
+//   );
+// };
 
-/**
- * Check if currentUser has permission to view listing and user data on a private marketplace.
- * Defined in currentUser's effectivePermissionSet relationship:
- * https://www.sharetribe.com/api-reference/marketplace.html#currentuser-permissionset
- *
- * @param {Object} currentUser API entity
- * @returns {Boolean} true if currentUser has permission to view listing and user data on a private marketplace.
- */
-export const hasPermissionToViewData = currentUser => {
-  if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
-    console.warn(
-      '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.'
-    );
-  }
-  return currentUser?.effectivePermissionSet?.attributes?.read === 'permission/allow';
-};
+// /**
+//  * Check if currentUser has permission to view listing and user data on a private marketplace.
+//  * Defined in currentUser's effectivePermissionSet relationship:
+//  * https://www.sharetribe.com/api-reference/marketplace.html#currentuser-permissionset
+//  *
+//  * @param {Object} currentUser API entity
+//  * @returns {Boolean} true if currentUser has permission to view listing and user data on a private marketplace.
+//  */
+// export const hasPermissionToViewData = currentUser => {
+//   if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
+//     console.warn(
+//       '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.',
+//     );
+//   }
+//   return (
+//     currentUser?.effectivePermissionSet?.attributes?.read === 'permission/allow'
+//   );
+// };
 
-/**
- * Check if currentUser has been approved to gain access.
- * I.e. they are not in 'pending-approval' or 'banned' state.
- *
- * If the user is in 'pending-approval' state, they don't have right to post listings and initiate transactions.
- *
- * @param {Object} currentUser API entity.
- * @returns {Boolean} true if currentUser has been approved (state is 'active').
- */
-export const isUserAuthorized = currentUser => currentUser?.attributes?.state === 'active';
+// /**
+//  * Check if currentUser has been approved to gain access.
+//  * I.e. they are not in 'pending-approval' or 'banned' state.
+//  *
+//  * If the user is in 'pending-approval' state, they don't have right to post listings and initiate transactions.
+//  *
+//  * @param {Object} currentUser API entity.
+//  * @returns {Boolean} true if currentUser has been approved (state is 'active').
+//  */
+// export const isUserAuthorized = currentUser =>
+//   currentUser?.attributes?.state === 'active';
 
-/**
- * Get the user type configuration for the current user's user type
- * @param {*} config marketplace configuration
- * @param {*} currentUser API entity
- * @returns a single user type configuration, if found
- */
-const getCurrentUserTypeConfig = (config, currentUser) => {
-  const { userTypes } = config.user;
-  return userTypes.find(
-    ut => ut.userType === currentUser?.attributes?.profile?.publicData?.userType
-  );
-};
+// /**
+//  * Get the user type configuration for the current user's user type
+//  * @param {*} config marketplace configuration
+//  * @param {*} currentUser API entity
+//  * @returns a single user type configuration, if found
+//  */
+// const getCurrentUserTypeConfig = (config, currentUser) => {
+//   const { userTypes } = config.user;
+//   return userTypes.find(
+//     ut =>
+//       ut.userType === currentUser?.attributes?.profile?.publicData?.userType,
+//   );
+// };
 
-/**
- * Check if the links for creating a new listing should be shown to the
- * user currently browsing the marketplace.
- * @param {Object} config Marketplace configuration
- * @param {Object} currentUser API entity
- * @returns {Boolean} true if the currentUser's user type, or the anonymous user configuration, is set to see the link
- */
-export const showCreateListingLinkForUser = (config, currentUser) => {
-  const { topbar } = config;
-  const currentUserTypeConfig = getCurrentUserTypeConfig(config, currentUser);
+// /**
+//  * Check if the links for creating a new listing should be shown to the
+//  * user currently browsing the marketplace.
+//  * @param {Object} config Marketplace configuration
+//  * @param {Object} currentUser API entity
+//  * @returns {Boolean} true if the currentUser's user type, or the anonymous user configuration, is set to see the link
+//  */
+// export const showCreateListingLinkForUser = (config, currentUser) => {
+//   const { topbar } = config;
+//   const currentUserTypeConfig = getCurrentUserTypeConfig(config, currentUser);
 
-  const { accountLinksVisibility } = currentUserTypeConfig || {};
+//   const { accountLinksVisibility } = currentUserTypeConfig || {};
 
-  return currentUser && accountLinksVisibility
-    ? accountLinksVisibility.postListings
-    : currentUser
-    ? true
-    : topbar?.postListingsLink
-    ? topbar.postListingsLink.showToUnauthenticatedUsers
-    : true;
-};
+//   return currentUser && accountLinksVisibility
+//     ? accountLinksVisibility.postListings
+//     : currentUser
+//     ? true
+//     : topbar?.postListingsLink
+//     ? topbar.postListingsLink.showToUnauthenticatedUsers
+//     : true;
+// };
 
-/**
- * Check if payout details tab and payout methods tab should be shown for the user
- * @param {Object} config Marketplace configuration
- * @param {*} currentUser API entity
- * @returns {Object} { showPayoutDetails: Boolean, showPaymentMethods: boolean }
- */
-export const showPaymentDetailsForUser = (config, currentUser) => {
-  const currentUserTypeConfig = getCurrentUserTypeConfig(config, currentUser);
-  const { paymentMethods = true, payoutDetails = true } =
-    currentUserTypeConfig?.accountLinksVisibility || {};
+// /**
+//  * Check if payout details tab and payout methods tab should be shown for the user
+//  * @param {Object} config Marketplace configuration
+//  * @param {*} currentUser API entity
+//  * @returns {Object} { showPayoutDetails: Boolean, showPaymentMethods: boolean }
+//  */
+// export const showPaymentDetailsForUser = (config, currentUser) => {
+//   const currentUserTypeConfig = getCurrentUserTypeConfig(config, currentUser);
+//   const { paymentMethods = true, payoutDetails = true } =
+//     currentUserTypeConfig?.accountLinksVisibility || {};
 
-  return currentUser
-    ? {
-        showPayoutDetails: payoutDetails,
-        showPaymentMethods: paymentMethods,
-      }
-    : {
-        showPayoutDetails: false,
-        showPaymentMethods: false,
-      };
-};
+//   return currentUser
+//     ? {
+//         showPayoutDetails: payoutDetails,
+//         showPaymentMethods: paymentMethods,
+//       }
+//     : {
+//         showPayoutDetails: false,
+//         showPaymentMethods: false,
+//       };
+// };
 
-/**
- * Check the roles defined for the current user
- * @param {*} config Marketplace configuration
- * @param {*} currentUser API entity
- * @returns Object with attributes 'customer' and 'provider' and boolean values for each
- */
-export const getCurrentUserTypeRoles = (config, currentUser) => {
-  const currentUserTypeConfig = getCurrentUserTypeConfig(config, currentUser);
-  return (
-    currentUserTypeConfig?.roles || {
-      customer: true,
-      provider: true,
-    }
-  );
-};
+// /**
+//  * Check the roles defined for the current user
+//  * @param {*} config Marketplace configuration
+//  * @param {*} currentUser API entity
+//  * @returns Object with attributes 'customer' and 'provider' and boolean values for each
+//  */
+// export const getCurrentUserTypeRoles = (config, currentUser) => {
+//   const currentUserTypeConfig = getCurrentUserTypeConfig(config, currentUser);
+//   return (
+//     currentUserTypeConfig?.roles || {
+//       customer: true,
+//       provider: true,
+//     }
+//   );
+// };

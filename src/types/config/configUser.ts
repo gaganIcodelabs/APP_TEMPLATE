@@ -75,6 +75,7 @@ export interface UserFieldSaveConfig {
 
 export interface UserFieldTypeConfig {
   limitToUserTypeIds: boolean;
+  userTypeIds?: string[];
 }
 
 export type UserSchemaType =
@@ -83,19 +84,27 @@ export type UserSchemaType =
   | 'enum'
   | 'multi-enum'
   | 'boolean'
-  | 'date'
-  | string; // fallback for future expansion
+  // | 'date'
+  | 'youtubeVideoUrl';
+// | string; // fallback for future expansion
+
+export interface UserFieldNumberConfig {
+  minimum?: number;
+  maximum?: number;
+}
 
 export interface UserFieldConfigItem {
   key: string;
-  scope: string;
+  // scope: string;
+  scope: 'private' | 'protected' | 'public' | 'meta';
   label?: string;
 
   schemaType: UserSchemaType;
 
   // Optional for text/long
-  minimum?: number;
-  maximum?: number;
+  // minimum?: number;
+  // maximum?: number;
+  numberConfig?: UserFieldNumberConfig;
 
   // Optional for enum/multi-enum
   enumOptions?: UserEnumOption[];
@@ -112,4 +121,12 @@ export interface UserFieldConfigItem {
 export interface UserConfig {
   userTypes: UserTypeConfigItem[];
   userFields: UserFieldConfigItem[];
+}
+
+// custom field for user
+export interface CustomUserFieldInputProps {
+  key: string;
+  name: string;
+  fieldConfig: UserFieldConfigItem;
+  defaultRequiredMessage: string;
 }
