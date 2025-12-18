@@ -1,19 +1,33 @@
-import React, { useMemo } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useForm } from 'react-hook-form';
+import React, { useMemo, useEffect } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useForm, useWatch } from 'react-hook-form';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { AuthStackParamList } from '../../types/navigation/paramList';
-import { UserTypeField } from './UserTypeField';
-import { SignupEmailInputField } from './SignupEmailInputField';
-import { SignupFirstNameInputField } from './SignupFirstNameInputField';
-import { SignupLastNameInputField } from './SignupLastNameInputField';
-import { SignupDisplayNameInputField } from './SignupDisplayNameInputField';
-import { SignupPasswordInputField } from './SignupPasswordInputField';
-import { SignupPhoneNumberInputField } from './SignupPhoneNumberInputField';
+import { UserTypeField } from './components/UserTypeField';
+// import { SignupEmailInputField } from './SignupEmailInputField';
+// import { SignupFirstNameInputField } from './SignupFirstNameInputField';
+// import { SignupLastNameInputField } from './SignupLastNameInputField';
+import { SignupDisplayNameInputField } from './components/SignupDisplayNameInputField';
+// import { SignupPasswordInputField } from './SignupPasswordInputField';
+// import { SignupPhoneNumberInputField } from './SignupPhoneNumberInputField';
 import { SignupFormValues } from './Signup.types';
 import { useConfiguration } from '@context/configurationContext';
 import type { UserTypeConfigItem } from '../../types/config/configUser';
-import CustomUserFields from './CustomUserFields';
+import CustomUserFields from './components/CustomUserFields';
+import { SignupEmailInputField } from './components/SignupEmailInputField';
+import { SignupPasswordInputField } from './components/SignupPasswordInputField';
+import { SignupFirstNameInputField } from './components/SignupFirstNameInputField';
+import { SignupLastNameInputField } from './components/SignupLastNameInputField';
+import { SignupPhoneNumberInputField } from './components/SignupPhoneNumberInputField';
+import { getSignUpSchema } from './helper';
+import { useTranslation } from 'react-i18next';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 type SignupRouteProp = RouteProp<AuthStackParamList, 'Signup'>;
 
@@ -22,7 +36,9 @@ export const Signup: React.FC = () => {
   const preselectedUserType = route.params?.userType;
 
   const config = useConfiguration();
+  const { t } = useTranslation();
   const userTypes = useMemo(() => config?.user.userTypes || [], [config]);
+  const userFields = useMemo(() => config?.user.userFields || [], [config]);
 
   const hasMultipleUserTypes = userTypes.length > 1;
 
@@ -30,7 +46,9 @@ export const Signup: React.FC = () => {
     control,
     handleSubmit,
     watch,
-    formState: { errors },
+    setError,
+    clearErrors,
+    formState: { isValid, errors },
   } = useForm<SignupFormValues>({
     defaultValues: {
       email: '',
@@ -39,15 +57,68 @@ export const Signup: React.FC = () => {
       lastName: '',
       displayName: '',
       phoneNumber: '',
+      terms: [],
       userType:
         preselectedUserType ||
         (hasMultipleUserTypes ? '' : userTypes[0]?.userType) ||
         '',
     },
-  });
+    resolver: (values, context, options) =>
+      zodResolver(getSignUpSchema(userTypes, values, userFields, t))(
+        values,
+        context,
+        options,
+      ),
 
-  // watch only triggers re-render when "userType" changes, keeping updates minimal
-  const watchedUserType = watch('userType');
+    mode: 'all',
+  });
+  // console.log('errors', errors);
+
+  // Watch all form values for password matching validation
+  const watchedValues = useWatch({ control });
+  const watchedUserType = watch('userType') ?? '';
+
+  // Custom validation to check if any field matches the password
+  // useEffect(() => {
+  //   const password = watchedValues.password;
+
+  //   if (!password) {
+  //     // Clear any existing password match errors when password is empty
+  //     Object.keys(watchedValues).forEach(key => {
+  //       if (
+  //         key !== 'password' &&
+  //         errors[key as keyof SignupFormValues]?.message ===
+  //           t('SignupForm.passwordCannotMatchOtherFields')
+  //       ) {
+  //         clearErrors(key as keyof SignupFormValues);
+  //       }
+  //     });
+  //     return;
+  //   }
+
+  //   // Check each field against password
+  //   Object.entries(watchedValues).forEach(([key, value]) => {
+  //     if (
+  //       key !== 'password' &&
+  //       typeof value === 'string' &&
+  //       value &&
+  //       value === password
+  //     ) {
+  //       setError(key as keyof SignupFormValues, {
+  //         type: 'custom',
+  //         message: t('SignupForm.passwordCannotMatchOtherFields'),
+  //       });
+  //     } else if (
+  //       key !== 'password' &&
+  //       errors[key as keyof SignupFormValues]?.message ===
+  //         t('SignupForm.passwordCannotMatchOtherFields')
+  //     ) {
+  //       // Clear the error if the field no longer matches the password
+  //       clearErrors(key as keyof SignupFormValues);
+  //     }
+  //   });
+  // }, [watchedValues, setError, clearErrors, errors, t]);
+
   const initialUserTypeKnown = !!preselectedUserType || !hasMultipleUserTypes;
   const showDefaultUserFields = initialUserTypeKnown || !!watchedUserType;
 
@@ -66,10 +137,6 @@ export const Signup: React.FC = () => {
     return !isDisabled && isAllowedInSignUp;
   }, [userTypeConfig]);
 
-  const isDisplayNameRequired = useMemo(() => {
-    return userTypeConfig?.displayNameSettings?.required === true;
-  }, [userTypeConfig]);
-
   // Check if phone number should be shown
   const showPhoneNumber = useMemo(() => {
     if (!userTypeConfig) return false;
@@ -79,62 +146,64 @@ export const Signup: React.FC = () => {
     return !isDisabled && isAllowedInSignUp;
   }, [userTypeConfig]);
 
-  const isPhoneNumberRequired = useMemo(() => {
-    return userTypeConfig?.phoneNumberSettings?.required === true;
-  }, [userTypeConfig]);
-
   const onSubmit = (data: SignupFormValues) => {
-    console.log('Signup form submitted', data);
+    try {
+      console.log('data', data);
+    } catch (error) {
+      console.error('Validation error:', error);
+      // Handle validation errors here
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign up</Text>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: 100,
+        }}
+      >
+        <UserTypeField
+          control={control}
+          hasExistingUserType={!!preselectedUserType}
+          userTypes={userTypes}
+        />
 
-      <UserTypeField
-        control={control}
-        errors={errors}
-        hasExistingUserType={!!preselectedUserType}
-        userTypes={userTypes}
-      />
+        {showDefaultUserFields && (
+          <>
+            <SignupEmailInputField control={control} />
+            <SignupPasswordInputField control={control} />
+            <SignupFirstNameInputField control={control} />
+            <SignupLastNameInputField control={control} />
+            {showDisplayName && (
+              <SignupDisplayNameInputField control={control} />
+            )}
+            {showPhoneNumber && (
+              <SignupPhoneNumberInputField control={control} />
+            )}
+          </>
+        )}
 
-      {showDefaultUserFields && (
-        <>
-          <SignupEmailInputField control={control} errors={errors} />
-          <SignupPasswordInputField control={control} errors={errors} />
-          <SignupFirstNameInputField control={control} errors={errors} />
-          <SignupLastNameInputField control={control} errors={errors} />
-          {showDisplayName && (
-            <SignupDisplayNameInputField
-              control={control}
-              errors={errors}
-              isRequired={isDisplayNameRequired}
-            />
-          )}
-          {showPhoneNumber && (
-            <SignupPhoneNumberInputField
-              control={control}
-              errors={errors}
-              isRequired={isPhoneNumberRequired}
-            />
-          )}
-        </>
-      )}
+        {showDefaultUserFields ? (
+          <CustomUserFields
+            showDefaultUserFields={showDefaultUserFields}
+            selectedUserType={watchedUserType}
+            control={control}
+          />
+        ) : null}
 
-      <CustomUserFields 
-      showDefaultUserFields={showDefaultUserFields}
-      selectedUserType={watchedUserType}
-      />
-
-      {showDefaultUserFields && (
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSubmit(onSubmit)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.buttonText}>Create account</Text>
-        </TouchableOpacity>
-      )}
+        {showDefaultUserFields && (
+          <TouchableOpacity
+            style={[styles.button, !isValid && styles.disabled]}
+            onPress={handleSubmit(onSubmit)}
+            activeOpacity={0.8}
+            disabled={!isValid}
+          >
+            <Text style={styles.buttonText}>Create account</Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
     </View>
   );
 };
@@ -163,5 +232,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

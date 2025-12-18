@@ -39,8 +39,8 @@ const Root = () => {
     }, 10000);
   }, [dispatch]);
 
-  // Show loading while auth info is being processed
-  if (isAuthenticated === null) {
+  // Show loading while auth info or config is being processed
+  if (isAuthenticated === null || !config) {
     return null; // or a loading component
   }
 

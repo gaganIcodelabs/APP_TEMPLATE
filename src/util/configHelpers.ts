@@ -1512,15 +1512,10 @@ const restructureListingFields = (hostedListingFields: ListingFields) => {
 // Restructure hosted user config //
 ///////////////////////////////////////
 
-const restructureUserTypes = (
-  hostedUserTypes: hostedUserTypesTypes,
-): Array<{ userType: string; label: string; [key: string]: unknown }> => {
+const restructureUserTypes = (hostedUserTypes: hostedUserTypesTypes) => {
   return hostedUserTypes.map(userType => {
-    // UserTypeConfigItem from hosted assets has 'id' but we need 'userType'
-    const userTypeId =
-      'id' in userType ? (userType as any).id : userType.userType;
-    const { id, ...rest } = userType as any;
-    return { userType: userTypeId, ...rest };
+    const { id, ...rest } = userType;
+    return { ...rest, userType: id || userType.userType };
   });
 };
 

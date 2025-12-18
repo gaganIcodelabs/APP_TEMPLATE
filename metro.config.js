@@ -16,12 +16,12 @@ const customConfig = {
   resolver: {
     alias: {
       //   '@assets': path.resolve(__dirname, 'src/assets'),
-      //   '@components': path.resolve(__dirname, 'src/components'),
+      '@components': path.resolve(__dirname, 'src/components'),
       '@config': path.resolve(__dirname, 'src/config'),
       '@constants': path.resolve(__dirname, 'src/constants'),
       '@context': path.resolve(__dirname, 'src/context'),
       //   '@hooks': path.resolve(__dirname, 'src/hooks'),
-      //   '@locales': path.resolve(__dirname, 'src/locales'),
+      '@locales': path.resolve(__dirname, 'src/locales'),
       '@navigators': path.resolve(__dirname, 'src/navigators'),
       '@redux': path.resolve(__dirname, 'src/redux'),
       '@screens': path.resolve(__dirname, 'src/screens'),

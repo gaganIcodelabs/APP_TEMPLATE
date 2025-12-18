@@ -2,6 +2,8 @@
 // Configurations related to user.                     //
 /////////////////////////////////////////////////////////
 
+import { UserTypeConfigItem } from '@appTypes/config';
+
 // Note: The userFields come from userFields asset nowadays by default.
 //       To use this built-in configuration, you need to change the overwrite from configHelper.js
 //       (E.g. use mergeDefaultTypesAndFieldsForDebugging func)
@@ -190,4 +192,4 @@ export const userTypes = [
     userType: 'd',
     label: 'Host',
   },
-];
+] as UserTypeConfigItem[];

@@ -2,13 +2,13 @@ import { AppConfig } from '@redux/slices/hostedAssets.slice';
 import React from 'react';
 import { Control, Controller, FieldErrors } from 'react-hook-form';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SignupFormValues } from './Signup.types';
+import { SignupFormValues } from '../Signup.types';
 
-type UserTypeOption = AppConfig['user']['userTypes'][number]
+type UserTypeOption = AppConfig['user']['userTypes'][number];
 
 type Props = {
   control: Control<SignupFormValues>;
-  errors: FieldErrors<SignupFormValues>;
+  // errors: FieldErrors<SignupFormValues>;
   hasExistingUserType: boolean;
   userTypes: UserTypeOption[];
   onUserTypeChange?: (userType: string) => void;
@@ -16,7 +16,6 @@ type Props = {
 
 export const UserTypeField: React.FC<Props> = ({
   control,
-  errors,
   hasExistingUserType,
   userTypes,
   onUserTypeChange,
@@ -28,7 +27,7 @@ export const UserTypeField: React.FC<Props> = ({
       control={control}
       name="userType"
       rules={{ required: 'Please select a user type' }}
-      render={({ field: { onChange, value } }) => (
+      render={({ field: { onChange, value }, fieldState: { error } }) => (
         <>
           <Text style={styles.label}>I want to</Text>
           <View style={styles.userTypeContainer}>
@@ -64,9 +63,7 @@ export const UserTypeField: React.FC<Props> = ({
               </TouchableOpacity>
             ))}
           </View>
-          {errors.userType && (
-            <Text style={styles.errorText}>{errors.userType.message}</Text>
-          )}
+          {error && <Text style={styles.errorText}>{error.message}</Text>}
         </>
       )}
     />

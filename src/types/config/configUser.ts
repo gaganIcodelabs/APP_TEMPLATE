@@ -41,6 +41,7 @@ export interface PhoneNumberSettings {
 
 // Individual user type configuration: customer / provider
 export interface UserTypeConfigItem {
+  id?: string;
   userType: string; // "customer" | "provider"
   roles: UserRoles;
   accountLinksVisibility: AccountLinksVisibility;
@@ -71,6 +72,8 @@ export interface UserFieldSaveConfig {
   label: string;
   required: boolean;
   displayInSignUp: boolean;
+  placeholderMessage?: string;
+  requiredMessage?: string;
 }
 
 export interface UserFieldTypeConfig {
