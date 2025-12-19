@@ -1,7 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import React from 'react';
-import { useAppDispatch } from '@redux/store';
-import { login } from '@redux/slices/auth.slice';
+import { useAppDispatch, useTypedSelector } from '@redux/store';
+import { login, loginInProgress } from '@redux/slices/auth.slice';
 import { Button, CommonText } from '@components/index';
 import { useTranslation } from 'react-i18next';
 import { colors } from '@constants/colors';
@@ -20,16 +20,17 @@ type LoginNavigationProp = NavigationProp<AuthStackParamList, 'Login'>;
 export const Login: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigation = useNavigation<LoginNavigationProp>();
+  const loginInProcess = useTypedSelector(loginInProgress);
   const { t } = useTranslation();
 
-  const onSubmit = async () => {
+  const onSubmit = async (values: LoginFormValues) => {
     try {
-      // await dispatch(
-      //   login({
-      //     username: 'b@yopmail.com',
-      //     password: '12345678',
-      //   }),
-      // );
+      await dispatch(
+        login({
+          username: values.email,
+          password: values.password,
+        }),
+      );
     } catch (error) {
       console.log('error', error);
     }
@@ -53,7 +54,12 @@ export const Login: React.FC = () => {
       <LoginEmailInputField control={control} />
       <LoginPasswordInputField control={control} />
 
-      <Button title="Login" onPress={handleSubmit(onSubmit)} />
+      <Button
+        title="Login"
+        onPress={handleSubmit(onSubmit)}
+        loader={loginInProcess}
+        disabled={loginInProcess}
+      />
 
       <View style={styles.loginContainer}>
         <CommonText style={styles.loginText}>
