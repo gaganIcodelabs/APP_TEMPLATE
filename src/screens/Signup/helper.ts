@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { UserFieldConfigItem } from '@appTypes/config';
 import {
   SCHEMA_TYPE_ENUM,
   SCHEMA_TYPE_LONG,
@@ -6,19 +6,20 @@ import {
   SCHEMA_TYPE_TEXT,
   SCHEMA_TYPE_YOUTUBE,
 } from '@constants/schemaTypes';
-import { TFunction } from 'i18next';
-import { UserFieldConfigItem } from '@appTypes/config';
-import { getPropsForCustomUserFieldInputs } from '@util/userHelpers';
 import { AppConfig } from '@redux/slices/hostedAssets.slice';
 import { YOUTUBE_URL_REGEX } from '@util/string';
+import { getPropsForCustomUserFieldInputs } from '@util/userHelpers';
+import { TFunction } from 'i18next';
+import { z } from 'zod';
 
 export const getSignUpSchema = (
   userTypes: AppConfig['user']['userTypes'],
-  values: any,
+  selectedUserType: string,
   userFields: UserFieldConfigItem[],
   t: TFunction,
 ) => {
-  const userType = values.userType;
+  console.log('signup schema');
+  const userType = selectedUserType;
   const userTypeConfig = userTypes.find(config => config.userType === userType);
 
   const userFieldProps = getPropsForCustomUserFieldInputs(
@@ -91,7 +92,6 @@ export const getSignUpSchema = (
             .refine(value => !value || YOUTUBE_URL_REGEX.test(value), {
               message: t('CustomExtendedDataField.invalidYoutubeUrl'),
             });
-
           if (!isRequired) {
             fieldSchema = fieldSchema.optional();
           }
@@ -108,14 +108,12 @@ export const getSignUpSchema = (
 
   const formSchema = z
     .object({
-      email: z
-        .string()
-        .min(1, t('SignupForm.emailRequired'))
-        .email(t('SignupForm.emailInvalid')),
+      email: z.email({
+        message: t('SignupForm.emailInvalid'),
+      }),
       firstName: z.string().min(3, t('SignupForm.firstNameRequired')),
       lastName: z.string().min(3, t('SignupForm.lastNameRequired')),
       password: z.string().min(8, t('SignupForm.passwordRequired')),
-      ...(userType ? { userType: z.string().default(userType) } : {}),
       displayName:
         showDisplayName && displayNameRequired
           ? z.string().min(3, t('SignupForm.displayNameRequired'))
@@ -124,33 +122,22 @@ export const getSignUpSchema = (
         showPhoneNumber && phoneNumberRequired
           ? z.string().min(8, t('SignupForm.phoneNumberRequired'))
           : z.string().optional(),
-      terms: z.array(z.string()).length(1),
-      // terms: z.boolean().refine(val => val === true, {
-      //   message: t('SignupForm.termsRequired'),
-      // }),
+      // terms: z.array(z.string()).length(1),
       ...conditionalFields,
     })
-    .superRefine((data, ctx) => {
-      const shouldErrorPassword = Object.entries(data).some(([key, value]) => {
-        if (
-          key !== 'password' &&
-          typeof value === 'string' &&
-          value &&
-          value === data.password
-        ) {
-          return true;
+    .refine(
+      data => {
+        const { password, ...rest } = data;
+        if (Object.values(rest).some(value => value === password)) {
+          return false;
         }
-        return false;
-      });
-      console.log('hellllllllo');
-      if (shouldErrorPassword) {
-        ctx.addIssue({
-          path: ['password'],
-          message: 'asdasdasdasdasdasdasdasdasdasdasd',
-          code: z.ZodIssueCode.custom,
-        });
-      }
-    });
+        return true;
+      },
+      {
+        error: t('SignupForm.passwordRepeatedOnOtherFields'),
+        path: ['password'],
+      },
+    );
 
   return formSchema;
 };

@@ -1,78 +1,62 @@
 import { AppConfig } from '@redux/slices/hostedAssets.slice';
 import React from 'react';
-import { Control, Controller, FieldErrors } from 'react-hook-form';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SignupFormValues } from '../Signup.types';
 
 type UserTypeOption = AppConfig['user']['userTypes'][number];
 
 type Props = {
-  control: Control<SignupFormValues>;
-  // errors: FieldErrors<SignupFormValues>;
   hasExistingUserType: boolean;
   userTypes: UserTypeOption[];
   onUserTypeChange?: (userType: string) => void;
+  value?: string;
 };
 
 export const UserTypeField: React.FC<Props> = ({
-  control,
   hasExistingUserType,
   userTypes,
   onUserTypeChange,
+  value,
 }) => {
   const hasMultipleUserTypes = userTypes.length > 1;
 
   return !hasExistingUserType && hasMultipleUserTypes ? (
-    <Controller
-      control={control}
-      name="userType"
-      rules={{ required: 'Please select a user type' }}
-      render={({ field: { onChange, value }, fieldState: { error } }) => (
-        <>
-          <Text style={styles.label}>I want to</Text>
-          <View style={styles.userTypeContainer}>
-            {userTypes.map(type => (
-              <TouchableOpacity
-                key={type.userType}
-                style={[
-                  styles.userTypeOption,
-                  value === type.userType && styles.userTypeOptionSelected,
-                ]}
-                onPress={() => {
-                  onChange(type.userType);
-                  onUserTypeChange?.(type.userType);
-                }}
-                activeOpacity={0.7}
-              >
-                <View
-                  style={[
-                    styles.radio,
-                    value === type.userType && styles.radioSelected,
-                  ]}
-                >
-                  {value === type.userType && <View style={styles.radioDot} />}
-                </View>
-                <Text
-                  style={[
-                    styles.userTypeLabel,
-                    value === type.userType && styles.userTypeLabelSelected,
-                  ]}
-                >
-                  {type.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          {error && <Text style={styles.errorText}>{error.message}</Text>}
-        </>
-      )}
-    />
+    <>
+      <Text style={styles.label}>I want to be</Text>
+      <View style={styles.userTypeContainer}>
+        {userTypes.map(type => (
+          <TouchableOpacity
+            key={type.userType}
+            style={[
+              styles.userTypeOption,
+              value === type.userType && styles.userTypeOptionSelected,
+            ]}
+            onPress={() => {
+              onUserTypeChange?.(type.userType);
+            }}
+            activeOpacity={0.7}
+          >
+            <View
+              style={[
+                styles.radio,
+                value === type.userType && styles.radioSelected,
+              ]}
+            >
+              {value === type.userType && <View style={styles.radioDot} />}
+            </View>
+            <Text
+              style={[
+                styles.userTypeLabel,
+                value === type.userType && styles.userTypeLabelSelected,
+              ]}
+            >
+              {type.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </>
   ) : (
-    <Controller
-      control={control}
-      name="userType"
-      render={() => <View style={styles.hidden} />}
-    />
+    <View style={styles.hidden} />
   );
 };
 

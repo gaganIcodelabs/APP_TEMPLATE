@@ -301,7 +301,7 @@ export const hostedConfigSelector = createSelector(
 
 export const appConfigSelector = createSelector(
   [assetsState],
-  state => state.appConfig || null,
+  state => state.appConfig,
 );
 
 export const hostedTranslationsSelector = createSelector(

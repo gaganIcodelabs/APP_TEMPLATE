@@ -1,4 +1,10 @@
-import React, { useMemo, useEffect } from 'react';
+/* eslint-disable react-native/no-inline-styles */
+import { useConfiguration } from '@context/configurationContext';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import React, { useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import {
   ScrollView,
   StyleSheet,
@@ -6,28 +12,18 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useForm, useWatch } from 'react-hook-form';
-import { useRoute, RouteProp } from '@react-navigation/native';
-import { AuthStackParamList } from '../../types/navigation/paramList';
-import { UserTypeField } from './components/UserTypeField';
-// import { SignupEmailInputField } from './SignupEmailInputField';
-// import { SignupFirstNameInputField } from './SignupFirstNameInputField';
-// import { SignupLastNameInputField } from './SignupLastNameInputField';
-import { SignupDisplayNameInputField } from './components/SignupDisplayNameInputField';
-// import { SignupPasswordInputField } from './SignupPasswordInputField';
-// import { SignupPhoneNumberInputField } from './SignupPhoneNumberInputField';
-import { SignupFormValues } from './Signup.types';
-import { useConfiguration } from '@context/configurationContext';
 import type { UserTypeConfigItem } from '../../types/config/configUser';
+import { AuthStackParamList } from '../../types/navigation/paramList';
 import CustomUserFields from './components/CustomUserFields';
+import { SignupDisplayNameInputField } from './components/SignupDisplayNameInputField';
 import { SignupEmailInputField } from './components/SignupEmailInputField';
-import { SignupPasswordInputField } from './components/SignupPasswordInputField';
 import { SignupFirstNameInputField } from './components/SignupFirstNameInputField';
 import { SignupLastNameInputField } from './components/SignupLastNameInputField';
+import { SignupPasswordInputField } from './components/SignupPasswordInputField';
 import { SignupPhoneNumberInputField } from './components/SignupPhoneNumberInputField';
+import { UserTypeField } from './components/UserTypeField';
 import { getSignUpSchema } from './helper';
-import { useTranslation } from 'react-i18next';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { SignupFormValues } from './Signup.types';
 
 type SignupRouteProp = RouteProp<AuthStackParamList, 'Signup'>;
 
@@ -42,14 +38,12 @@ export const Signup: React.FC = () => {
 
   const hasMultipleUserTypes = userTypes.length > 1;
 
-  const {
-    control,
-    handleSubmit,
-    watch,
-    setError,
-    clearErrors,
-    formState: { isValid, errors },
-  } = useForm<SignupFormValues>({
+  const [selectedUserType, setSelectedUserType] = useState(
+    preselectedUserType ||
+      (hasMultipleUserTypes ? '' : userTypes[0]?.userType) ||
+      '',
+  );
+  const { control, handleSubmit } = useForm<SignupFormValues>({
     defaultValues: {
       email: '',
       password: '',
@@ -57,76 +51,25 @@ export const Signup: React.FC = () => {
       lastName: '',
       displayName: '',
       phoneNumber: '',
-      terms: [],
-      userType:
-        preselectedUserType ||
-        (hasMultipleUserTypes ? '' : userTypes[0]?.userType) ||
-        '',
+      // terms: [],
     },
-    resolver: (values, context, options) =>
-      zodResolver(getSignUpSchema(userTypes, values, userFields, t))(
-        values,
-        context,
-        options,
-      ),
+    resolver: zodResolver(
+      getSignUpSchema(userTypes, selectedUserType, userFields, t),
+    ),
 
-    mode: 'all',
+    mode: 'onChange',
   });
-  // console.log('errors', errors);
-
-  // Watch all form values for password matching validation
-  const watchedValues = useWatch({ control });
-  const watchedUserType = watch('userType') ?? '';
-
-  // Custom validation to check if any field matches the password
-  // useEffect(() => {
-  //   const password = watchedValues.password;
-
-  //   if (!password) {
-  //     // Clear any existing password match errors when password is empty
-  //     Object.keys(watchedValues).forEach(key => {
-  //       if (
-  //         key !== 'password' &&
-  //         errors[key as keyof SignupFormValues]?.message ===
-  //           t('SignupForm.passwordCannotMatchOtherFields')
-  //       ) {
-  //         clearErrors(key as keyof SignupFormValues);
-  //       }
-  //     });
-  //     return;
-  //   }
-
-  //   // Check each field against password
-  //   Object.entries(watchedValues).forEach(([key, value]) => {
-  //     if (
-  //       key !== 'password' &&
-  //       typeof value === 'string' &&
-  //       value &&
-  //       value === password
-  //     ) {
-  //       setError(key as keyof SignupFormValues, {
-  //         type: 'custom',
-  //         message: t('SignupForm.passwordCannotMatchOtherFields'),
-  //       });
-  //     } else if (
-  //       key !== 'password' &&
-  //       errors[key as keyof SignupFormValues]?.message ===
-  //         t('SignupForm.passwordCannotMatchOtherFields')
-  //     ) {
-  //       // Clear the error if the field no longer matches the password
-  //       clearErrors(key as keyof SignupFormValues);
-  //     }
-  //   });
-  // }, [watchedValues, setError, clearErrors, errors, t]);
 
   const initialUserTypeKnown = !!preselectedUserType || !hasMultipleUserTypes;
-  const showDefaultUserFields = initialUserTypeKnown || !!watchedUserType;
+  const showDefaultUserFields = initialUserTypeKnown || !!selectedUserType;
 
   // Get the user type configuration
   const userTypeConfig = useMemo(() => {
-    const foundConfig = userTypes.find(cfg => cfg.userType === watchedUserType);
+    const foundConfig = userTypes.find(
+      cfg => cfg.userType === selectedUserType,
+    );
     return foundConfig as UserTypeConfigItem | undefined;
-  }, [userTypes, watchedUserType]);
+  }, [userTypes, selectedUserType]);
 
   // Check if displayName should be shown
   const showDisplayName = useMemo(() => {
@@ -149,6 +92,8 @@ export const Signup: React.FC = () => {
   const onSubmit = (data: SignupFormValues) => {
     try {
       console.log('data', data);
+
+      data.userType = selectedUserType; // append user type to the form data before submitting
     } catch (error) {
       console.error('Validation error:', error);
       // Handle validation errors here
@@ -165,7 +110,8 @@ export const Signup: React.FC = () => {
         }}
       >
         <UserTypeField
-          control={control}
+          value={selectedUserType}
+          onUserTypeChange={setSelectedUserType}
           hasExistingUserType={!!preselectedUserType}
           userTypes={userTypes}
         />
@@ -188,17 +134,17 @@ export const Signup: React.FC = () => {
         {showDefaultUserFields ? (
           <CustomUserFields
             showDefaultUserFields={showDefaultUserFields}
-            selectedUserType={watchedUserType}
+            selectedUserType={selectedUserType}
             control={control}
           />
         ) : null}
 
         {showDefaultUserFields && (
           <TouchableOpacity
-            style={[styles.button, !isValid && styles.disabled]}
+            style={[styles.button]}
             onPress={handleSubmit(onSubmit)}
             activeOpacity={0.8}
-            disabled={!isValid}
+            // don't use disabled prop = isValid because it will prevent the error to be displayed on cross field validation
           >
             <Text style={styles.buttonText}>Create account</Text>
           </TouchableOpacity>

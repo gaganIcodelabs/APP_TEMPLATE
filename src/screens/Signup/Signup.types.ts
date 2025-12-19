@@ -1,10 +1,10 @@
 export type SignupFormValues = {
   email: string;
   password: string;
-  userType: string;
+  // userType: string;
   firstName: string;
   lastName: string;
-  displayName?: string;
-  phoneNumber?: string;
-  terms: string[];
+  displayName: string | undefined;
+  phoneNumber: string | undefined;
+  // terms: string[];
 } & Record<string, any>; // Dynamic user fields

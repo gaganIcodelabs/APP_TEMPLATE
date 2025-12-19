@@ -4,10 +4,9 @@ import {
   createSelector,
   createSlice,
 } from '@reduxjs/toolkit';
-import * as log from '../../util/log';
-import { hideSplash } from 'react-native-splash-view';
 import { AuthInfo } from '../../types/auth';
 import { storableError } from '../../util';
+import * as log from '../../util/log';
 import { RootState } from '../store';
 import { clearCurrentUser, fetchCurrentUser } from './user.slice';
 
@@ -250,8 +249,6 @@ export const fetchAuthenticationState = createAsyncThunk<AuthInfo, void, Thunk>(
       const message =
         error instanceof Error ? error.message : 'Failed to fetch auth info';
       return rejectWithValue({ message });
-    } finally {
-      hideSplash();
     }
   },
 );

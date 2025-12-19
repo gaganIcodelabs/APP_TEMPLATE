@@ -5,7 +5,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import {
   fetchAuthenticationState,
   isAuthenticatedSelector,
-  logout,
   selectIsAuthenticated,
 } from '@redux/slices/auth.slice';
 import {
@@ -31,16 +30,28 @@ const Root = () => {
     // Start the authentication flow
     dispatch(fetchAuthenticationState());
     setTimeout(() => {
-      const isAuthenticatedLocal = isAuthenticatedSelector(store.getState());
-      if (isAuthenticatedLocal === null) {
+      const _isAuthenticated = isAuthenticatedSelector(store.getState());
+      if (_isAuthenticated === null) {
         // if isAuthenticated is null, means authentication state is not fetched yet
         hideSplash();
       }
     }, 10000);
   }, [dispatch]);
 
-  // Show loading while auth info or config is being processed
-  if (isAuthenticated === null || !config) {
+  useEffect(() => {
+    const unsubscribe = store.subscribe(() => {
+      const _config = appConfigSelector(store.getState());
+      const _isAuthenticated = isAuthenticatedSelector(store.getState());
+      if (_config !== undefined && _isAuthenticated !== null) {
+        hideSplash();
+        unsubscribe();
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Show loading while auth info is being processed
+  if (isAuthenticated === null) {
     return null; // or a loading component
   }
 
