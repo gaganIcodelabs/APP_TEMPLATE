@@ -24,12 +24,17 @@ import { SignupPhoneNumberInputField } from './components/SignupPhoneNumberInput
 import { UserTypeField } from './components/UserTypeField';
 import { getSignUpSchema } from './helper';
 import { SignupFormValues } from './Signup.types';
+import { getNonUserFieldParams, pickUserFieldsData } from '@util/userHelpers';
+import { useAppDispatch } from '@redux/store';
+import { signupWithEmailPassword } from '@redux/slices/auth.slice';
 
 type SignupRouteProp = RouteProp<AuthStackParamList, 'Signup'>;
 
 export const Signup: React.FC = () => {
   const route = useRoute<SignupRouteProp>();
   const preselectedUserType = route.params?.userType;
+
+  const dispatch = useAppDispatch();
 
   const config = useConfiguration();
   const { t } = useTranslation();
@@ -90,14 +95,40 @@ export const Signup: React.FC = () => {
   }, [userTypeConfig]);
 
   const onSubmit = (data: SignupFormValues) => {
-    try {
-      console.log('data', data);
+    data.userType = selectedUserType; // append user type to the form data before submitting
+    const {
+      userType,
+      email,
+      password,
+      firstName,
+      lastName,
+      displayName,
+      ...rest
+    } = data;
+    const displayNameMaybe = displayName
+      ? { displayName: displayName.trim() }
+      : {};
 
-      data.userType = selectedUserType; // append user type to the form data before submitting
-    } catch (error) {
-      console.error('Validation error:', error);
-      // Handle validation errors here
-    }
+    const params = {
+      email,
+      password,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      ...displayNameMaybe,
+      publicData: {
+        userType,
+        ...pickUserFieldsData(rest, 'public', userType, userFields),
+      },
+      privateData: {
+        ...pickUserFieldsData(rest, 'private', userType, userFields),
+      },
+      protectedData: {
+        ...pickUserFieldsData(rest, 'protected', userType, userFields),
+        ...getNonUserFieldParams(rest, userFields),
+      },
+    };
+
+    dispatch(signupWithEmailPassword(params));
   };
 
   return (

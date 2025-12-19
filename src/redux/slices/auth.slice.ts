@@ -130,46 +130,48 @@ const initialState = {
 //   },
 // );
 
-// const signupWithEmailPassword = createAsyncThunk<
-//   unknown,
-//   { email: string; password: string },
-//   {
-//     dispatch: AppDispatch;
-//     state: RootState;
-//     extra: any;
-//     rejectWithValue: (value: unknown) => never;
-//   }
-// >(
-//   'auth/signupWithEmailPassword',
-//   (params, thunkAPI) => {
-//     const { rejectWithValue, extra: sdk, dispatch } = thunkAPI;
+export const signupWithEmailPassword = createAsyncThunk<
+  unknown,
+  {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    displayName?: string;
+    publicData: Record<string, any>;
+    privateData: Record<string, any>;
+    protectedData: Record<string, any>;
+  },
+  Thunk
+>(
+  'auth/signupWithEmailPassword',
+  (params, thunkAPI) => {
+    const { rejectWithValue, extra: sdk, dispatch } = thunkAPI;
 
-//     return sdk.currentUser
-//       .create(params)
-//       .then(() =>
-//         dispatch(
-//           loginThunk({ username: params.email, password: params.password }),
-//         ).unwrap(),
-//       )
-//       .then(() => params)
-//       .catch(e => {
-//         log.error(e, 'signup-failed', {
-//           email: params.email,
-//           firstName: params.firstName,
-//           lastName: params.lastName,
-//         });
-//         return rejectWithValue(storableError(e));
-//       });
-//   },
-//   {
-//     condition: (_, { getState }) => {
-//       const state = getState();
-//       if (authenticationInProgress(state, 'signupInProgress')) {
-//         return false;
-//       }
-//     },
-//   },
-// );
+    return sdk.currentUser
+      .create(params)
+      .then(() => {
+        dispatch(fetchAuthenticationState())
+        return params
+      })
+      .catch((e: any) => {
+        log.error(e, 'signup-failed', {
+          email: params.email,
+          firstName: params.firstName,
+          lastName: params.lastName,
+        });
+        return rejectWithValue(storableError(e));
+      });
+  },
+  {
+    condition: (_, { getState }) => {
+      const state = getState();
+      if (signupInProgress(state)) {
+        return false;
+      }
+    },
+  },
+);
 
 // const signupWithIdpThunk = createAsyncThunk(
 //   'auth/signupWithIdp',
@@ -193,6 +195,7 @@ const initialState = {
 //   },
 // );
 
+// this thunk will not only fetch authInfo but also fetch current user and check if user is banned or deleted
 export const fetchAuthenticationState = createAsyncThunk<AuthInfo, void, Thunk>(
   'auth/fetchAuthenticationState',
   async (_, { dispatch, extra: sdk, rejectWithValue }) => {
@@ -274,7 +277,7 @@ export const login = createAsyncThunk<
   async (params, { extra: sdk, rejectWithValue, dispatch }) => {
     try {
       const res = await sdk.login(params);
-      dispatch(fetchCurrentUser({}));
+      dispatch(fetchAuthenticationState()); // this will fetch authInfo and current user and check if user is banned or deleted
       return res;
     } catch (error: any) {
       console.log('error', error);
@@ -365,37 +368,21 @@ const authSlice = createSlice({
         state.loginInProgress = false;
         state.loginError = action.payload;
       });
-    // // Logout
-    // builder
-    //   .addCase(logoutThunk.pending, state => {
-    //     state.logoutInProgress = true;
-    //     state.loginError = null;
-    //     state.logoutError = null;
-    //   })
-    //   .addCase(logoutThunk.fulfilled, state => {
-    //     state.logoutInProgress = false;
-    //     state.isAuthenticated = false;
-    //     state.isLoggedInAs = false;
-    //     state.authScopes = [];
-    //   })
-    //   .addCase(logoutThunk.rejected, (state, action) => {
-    //     state.logoutInProgress = false;
-    //     state.logoutError = action.payload;
-    //   });
     // // Signup
-    // builder
-    //   .addCase(signupThunk.pending, state => {
-    //     state.signupInProgress = true;
-    //     state.loginError = null;
-    //     state.signupError = null;
-    //   })
-    //   .addCase(signupThunk.fulfilled, state => {
-    //     state.signupInProgress = false;
-    //   })
-    //   .addCase(signupThunk.rejected, (state, action) => {
-    //     state.signupInProgress = false;
-    //     state.signupError = action.payload;
-    //   });
+    builder
+      .addCase(signupWithEmailPassword.pending, state => {
+        state.signupInProgress = true;
+        state.loginError = null;
+        state.signupError = null;
+      })
+      .addCase(signupWithEmailPassword.fulfilled, state => {
+        state.signupInProgress = false;
+        state.isAuthenticated = true;
+      })
+      .addCase(signupWithEmailPassword.rejected, (state, action) => {
+        state.signupInProgress = false;
+        state.signupError = action.payload;
+      });
     // // Signup with IDP (Confirm)
     // builder
     //   .addCase(signupWithIdpThunk.pending, state => {
@@ -434,43 +421,5 @@ export const selectAuthInfoInProgress = (state: RootState) =>
   state.auth.authInfoInProgress;
 export const selectAuthInfoError = (state: RootState) =>
   state.auth.authInfoError;
-
-// export const authenticationInProgress = (state, nextInProgress = 'any') => {
-//   const {
-//     loginInProgress,
-//     logoutInProgress,
-//     signupInProgress,
-//     confirmInProgress,
-//   } = state.auth;
-//   const anyInProgress =
-//     loginInProgress ||
-//     logoutInProgress ||
-//     signupInProgress ||
-//     confirmInProgress;
-//   return nextInProgress === 'loginInProgress'
-//     ? loginInProgress || logoutInProgress || confirmInProgress
-//     : anyInProgress;
-// };
-
-// ================ Thunk Wrappers ================ //
-// These maintain the same API as the original thunks
-
-// export const login = (username, password) => dispatch => {
-//   return dispatch(loginThunk({ username, password })).unwrap();
-// };
-
-// export const logout = () => dispatch => {
-//   return dispatch(logoutThunk()).unwrap();
-// };
-
-// export const signup = params => dispatch => {
-//   return dispatch(signupThunk(params)).unwrap();
-// };
-
-// export const signupWithIdp = params => dispatch => {
-//   return dispatch(signupWithIdpThunk(params)).unwrap();
-// };
-
-// export const authInfo = () => dispatch => {
-//   return dispatch(authInfoThunk()).unwrap();
-// };
+export const signupInProgress = (state: RootState) =>
+  state.auth.signupInProgress;

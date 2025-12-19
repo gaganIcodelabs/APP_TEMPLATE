@@ -311,3 +311,23 @@ export const getPropsForCustomUserFieldInputs = (
 //     }
 //   );
 // };
+
+export const getNonUserFieldParams = (
+  values: any,
+  userFieldConfigs: UserFieldConfigItem[],
+) => {
+  const userFieldKeys = userFieldConfigs.map(({ scope, key }) =>
+    addScopePrefix(scope, key),
+  );
+
+  return Object.entries(values).reduce((picked, [key, value]) => {
+    const isUserFieldKey = userFieldKeys.includes(key);
+
+    return isUserFieldKey
+      ? picked
+      : {
+          ...picked,
+          [key]: value,
+        };
+  }, {});
+};
