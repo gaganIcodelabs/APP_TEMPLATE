@@ -141,9 +141,12 @@ export const fetchAppAssets = createAsyncThunk<
     // If version is given fetch assets by the version,
     // otherwise default to "latest" alias
     const fetchAssets = (paths: string[]) =>
-      version
-        ? sdk.assetsByVersion({ paths, version })
-        : sdk.assetsByAlias({ paths, alias: 'latest' });
+      // version
+      //   ? // && false
+      //     sdk.assetsByVersion({ paths, version })
+      // :
+      //always fetch the latest asset with the alias
+      sdk.assetsByAlias({ paths, alias: 'latest' });
 
     const separateAssetFetches = [
       // This is a big file, better fetch it alone.
@@ -271,7 +274,6 @@ const hostedAssetsSlice = createSlice({
           action.payload;
         state.hostedConfig = hostedConfig;
         state.hostedTranslations = hostedTranslations;
-
         const appConfig = mergeConfig(state.hostedConfig, defaultConfig);
 
         state.appConfig = appConfig;

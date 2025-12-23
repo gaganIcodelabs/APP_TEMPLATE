@@ -140,3 +140,10 @@ export const getSignUpSchema = (
 
   return formSchema;
 };
+
+export const getSoleUserTypeMaybe = (
+  userTypes: AppConfig['user']['userTypes'],
+) =>
+  Array.isArray(userTypes) && userTypes.length === 1
+    ? userTypes[0].userType
+    : null;

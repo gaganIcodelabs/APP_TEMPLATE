@@ -1,12 +1,6 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useMemo, useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useConfiguration } from '@context/configurationContext';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -27,11 +21,15 @@ import { SignupLastNameInputField } from './components/SignupLastNameInputField'
 import { SignupPasswordInputField } from './components/SignupPasswordInputField';
 import { SignupPhoneNumberInputField } from './components/SignupPhoneNumberInputField';
 import { UserTypeField } from './components/UserTypeField';
-import { getSignUpSchema } from './helper';
+import { getSignUpSchema, getSoleUserTypeMaybe } from './helper';
 import { SignupFormValues } from './Signup.types';
 import { getNonUserFieldParams, pickUserFieldsData } from '@util/userHelpers';
-import { useAppDispatch } from '@redux/store';
-import { signupWithEmailPassword } from '@redux/slices/auth.slice';
+import { useAppDispatch, useTypedSelector } from '@redux/store';
+import {
+  loginInProgress,
+  signupInProgress,
+  signupWithEmailPassword,
+} from '@redux/slices/auth.slice';
 import { TermsAndPolicy } from './components/TermsAndPolicy';
 import { Button, CommonText } from '@components/index';
 import { colors } from '@constants/colors';
@@ -43,22 +41,20 @@ type SignupNavigationProp = NavigationProp<AuthStackParamList, 'Signup'>;
 export const Signup: React.FC = () => {
   const route = useRoute<SignupRouteProp>();
   const preselectedUserType = route.params?.userType;
-
   const dispatch = useAppDispatch();
 
   const navigation = useNavigation<SignupNavigationProp>();
+  const signupInProcess = useTypedSelector(signupInProgress);
+  const loginInProcess = useTypedSelector(loginInProgress);
   const config = useConfiguration();
   const { t } = useTranslation();
   const userTypes = useMemo(() => config?.user.userTypes || [], [config]);
   const userFields = useMemo(() => config?.user.userFields || [], [config]);
-
   const hasMultipleUserTypes = userTypes.length > 1;
-
-  const [selectedUserType, setSelectedUserType] = useState(
-    preselectedUserType ||
-      (hasMultipleUserTypes ? '' : userTypes[0]?.userType) ||
-      '',
+  const [selectedUserType, setSelectedUserType] = useState<string>(
+    preselectedUserType || getSoleUserTypeMaybe(userTypes) || '',
   );
+
   const { control, handleSubmit } = useForm<SignupFormValues>({
     defaultValues: {
       email: '',
@@ -146,7 +142,7 @@ export const Signup: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Sign up</Text>
+      <CommonText style={styles.title}>Sign up</CommonText>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
@@ -190,6 +186,8 @@ export const Signup: React.FC = () => {
               title="Create Account"
               onPress={handleSubmit(onSubmit)}
               style={{ marginBottom: 20 }}
+              loader={signupInProcess || loginInProcess}
+              disabled={signupInProcess || loginInProcess}
               //   // don't use disabled prop = isValid because it will prevent the error to be displayed on cross field validation
             />
             <View style={styles.loginContainer}>

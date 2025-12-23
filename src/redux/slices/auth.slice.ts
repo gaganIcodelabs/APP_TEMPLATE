@@ -130,6 +130,48 @@ const initialState = {
 //   },
 // );
 
+// Old version with .then() chain - kept for reference
+// export const signupWithEmailPassword = createAsyncThunk<
+//   unknown,
+//   {
+//     email: string;
+//     password: string;
+//     firstName: string;
+//     lastName: string;
+//     displayName?: string;
+//     publicData: Record<string, any>;
+//     privateData: Record<string, any>;
+//     protectedData: Record<string, any>;
+//   },
+//   Thunk
+// >(
+//   'auth/signupWithEmailPassword',
+//   async (params, thunkAPI) => {
+//     const { rejectWithValue, extra: sdk, dispatch } = thunkAPI;
+
+//     return sdk.currentUser
+//       .create(params)
+//       .then(() => {
+//         // After user is created, automatically log them in
+//         dispatch(
+//           login({
+//             username: params.email,
+//             password: params.password,
+//           }),
+//         );
+//         return params;
+//       })
+//       .catch((e: any) => {
+//         log.error(e, 'signup-failed', {
+//           email: params.email,
+//           firstName: params.firstName,
+//           lastName: params.lastName,
+//         });
+//         return rejectWithValue(storableError(e));
+//       });
+//   },
+
+// New version with async/await and try/catch
 export const signupWithEmailPassword = createAsyncThunk<
   unknown,
   {
@@ -145,23 +187,28 @@ export const signupWithEmailPassword = createAsyncThunk<
   Thunk
 >(
   'auth/signupWithEmailPassword',
-  (params, thunkAPI) => {
+  async (params, thunkAPI) => {
     const { rejectWithValue, extra: sdk, dispatch } = thunkAPI;
 
-    return sdk.currentUser
-      .create(params)
-      .then(() => {
-        dispatch(fetchAuthenticationState())
-        return params
-      })
-      .catch((e: any) => {
-        log.error(e, 'signup-failed', {
-          email: params.email,
-          firstName: params.firstName,
-          lastName: params.lastName,
-        });
-        return rejectWithValue(storableError(e));
+    try {
+      await sdk.currentUser.create(params);
+      // After user is created, automatically log them in
+      dispatch(
+        login({
+          username: params.email,
+          password: params.password,
+        }),
+      );
+
+      return params;
+    } catch (e: any) {
+      log.error(e, 'signup-failed', {
+        email: params.email,
+        firstName: params.firstName,
+        lastName: params.lastName,
       });
+      return rejectWithValue(storableError(e));
+    }
   },
   {
     condition: (_, { getState }) => {
@@ -423,3 +470,6 @@ export const selectAuthInfoError = (state: RootState) =>
   state.auth.authInfoError;
 export const signupInProgress = (state: RootState) =>
   state.auth.signupInProgress;
+export const loginInProgress = (state: RootState) => state.auth.loginInProgress;
+export const loginOutInProgress = (state: RootState) =>
+  state.auth.logoutInProgress;
