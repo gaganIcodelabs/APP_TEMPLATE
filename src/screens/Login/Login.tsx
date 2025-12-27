@@ -61,6 +61,13 @@ export const Login: React.FC = () => {
         disabled={loginInProcess}
       />
 
+      <Button
+        title="Login with Google"
+        // onPress={handleGoogleSignIn}
+        // loader={googleSignInProgress}
+        // disabled={googleSignInProgress}
+      />
+
       <View style={styles.loginContainer}>
         <CommonText style={styles.loginText}>
           {t('Authentication.dontHaveAnAccount')}{' '}

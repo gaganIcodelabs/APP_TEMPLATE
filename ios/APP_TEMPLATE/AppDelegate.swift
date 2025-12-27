@@ -33,6 +33,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     return true
   }
+
+  // ⬇️ Add this method
+  override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+    // Add any other URL handlers you're using (e.g. Facebook SDK)
+    return ApplicationDelegate.shared.application(app, open: url, options: options) ||
+           GIDSignIn.sharedInstance.handle(url)
+  }
+
    private func showSplashScreen() {
       if let splashClass = NSClassFromString("SplashView") as? NSObject.Type,
           let splashInstance = splashClass.perform(NSSelectorFromString("sharedInstance"))?.takeUnretainedValue() as? NSObject {
