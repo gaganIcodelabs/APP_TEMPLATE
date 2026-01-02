@@ -6,13 +6,13 @@ import { useEffect } from 'react';
 import { initializeEditListingWizard } from './editListing.slice';
 import { EDIT_LISTING_SCREENS } from './screens.constant';
 import EditListing from './screens/EditListing';
-import { EditListingStackParamList } from './types/navigation.types';
+import { EditListingWizardParamList } from './types/navigation.types';
 
-const Stack = createNativeStackNavigator<EditListingStackParamList>();
+const Stack = createNativeStackNavigator<EditListingWizardParamList>();
 
 export const EditListingNavigator = () => {
   const dispatch = useAppDispatch();
-  const route = useRoute<RouteProp<AppStackParamList, 'EditListingStack'>>();
+  const route = useRoute<RouteProp<AppStackParamList, 'EditListingWizard'>>();
 
   useEffect(() => {
     dispatch(initializeEditListingWizard(route.key));
