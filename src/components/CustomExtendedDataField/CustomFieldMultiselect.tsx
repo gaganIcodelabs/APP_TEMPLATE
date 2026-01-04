@@ -3,12 +3,11 @@ import { ListingField } from '@appTypes/config/configListing';
 import { CommonText } from '@components/index';
 import { Control, Controller } from 'react-hook-form';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { SignupFormValues } from '../../screens/Signup/Signup.types';
 import { getLabel } from './CustomExtendedDataField';
 
 type CustomFieldMultiSelectPropsBase = {
   name: string;
-  control: Control<SignupFormValues>;
+  control: Control;
 };
 
 type CustomFieldMultiSelectPropsUser = CustomFieldMultiSelectPropsBase & {
@@ -21,7 +20,9 @@ type CustomFieldMultiSelectPropsListing = CustomFieldMultiSelectPropsBase & {
   fieldConfig: ListingField;
 };
 
-type CustomFieldMultiSelectProps = CustomFieldMultiSelectPropsUser | CustomFieldMultiSelectPropsListing;
+type CustomFieldMultiSelectProps =
+  | CustomFieldMultiSelectPropsUser
+  | CustomFieldMultiSelectPropsListing;
 
 export const CustomFieldMultiselect = (props: CustomFieldMultiSelectProps) => {
   const { control, fieldConfig, name } = props;

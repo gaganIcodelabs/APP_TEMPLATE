@@ -29,6 +29,7 @@ const customConfig = {
       '@transactions': path.resolve(__dirname, 'src/transactions'),
       '@appTypes': path.resolve(__dirname, 'src/types'),
       '@util': path.resolve(__dirname, 'src/util'),
+      '@features': path.resolve(__dirname, 'src/features'),
     },
   },
 };

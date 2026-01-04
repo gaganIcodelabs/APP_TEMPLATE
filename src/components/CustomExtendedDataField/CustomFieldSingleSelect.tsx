@@ -1,21 +1,20 @@
-import { useState } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Modal,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
 import { UserFieldConfigItem } from '@appTypes/config';
 import { ListingField } from '@appTypes/config/configListing';
-import { SignupFormValues } from '../../screens/Signup/Signup.types';
+import { useState } from 'react';
 import { Control, Controller } from 'react-hook-form';
+import {
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { getLabel } from './CustomExtendedDataField';
 
 type CustomFieldSingleSelectPropsBase = {
   name: string;
-  control: Control<SignupFormValues>;
+  control: Control;
 };
 
 type CustomFieldSingleSelectPropsUser = CustomFieldSingleSelectPropsBase & {
@@ -28,7 +27,9 @@ type CustomFieldSingleSelectPropsListing = CustomFieldSingleSelectPropsBase & {
   fieldConfig: ListingField;
 };
 
-type CustomFieldSingleSelectProps = CustomFieldSingleSelectPropsUser | CustomFieldSingleSelectPropsListing;
+type CustomFieldSingleSelectProps =
+  | CustomFieldSingleSelectPropsUser
+  | CustomFieldSingleSelectPropsListing;
 
 const CustomFieldSingleSelect = (props: CustomFieldSingleSelectProps) => {
   const { control, fieldConfig, name, fieldType } = props;
@@ -36,7 +37,7 @@ const CustomFieldSingleSelect = (props: CustomFieldSingleSelectProps) => {
 
   // Get options from config or use default options for testing
   const { enumOptions = [], saveConfig } = fieldConfig || {};
-  
+
   // Handle different placeholder message structures
   const placeholderMessage =
     fieldType === 'user' && 'placeholderMessage' in (saveConfig || {})

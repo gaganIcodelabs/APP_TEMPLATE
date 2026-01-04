@@ -16,7 +16,8 @@
       // "@scripts/*": ["scripts/*"],
       "@transactions/*": ["transactions/*"],
       "@appTypes/*": ["types/*"],
-      "@util/*": ["util/*"]
+      "@util/*": ["util/*"],
+      "@features/*": ["features/*"]
     }
   },
   "extends": "@react-native/typescript-config",

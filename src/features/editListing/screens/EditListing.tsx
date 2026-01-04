@@ -1,51 +1,54 @@
-import { RadioList } from '@components/index';
-import { useConfiguration } from '@context/configurationContext';
-import { RouteProp, useRoute } from '@react-navigation/native';
-import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { EditListingWizardParamList } from '../types/navigation.types';
-import { EDIT_LISTING_SCREENS } from '../screens.constant';
-import { useTypedSelector } from '@redux/store';
 import { Listing } from '@appTypes/index';
+import { useTypedSelector } from '@redux/store';
+import { FormProvider, useForm } from 'react-hook-form';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import EditListingCustomFields from '../components/EditListingCustomFields';
+import EditListingDescription from '../components/EditListingDescription';
+import EditListingTitle from '../components/EditListingTitle';
+import SelectListingCategory from '../components/SelectListingCategory';
 import SelectListingType from '../components/SelectListingType';
-import { useForm } from 'react-hook-form';
-import { EditListingFormType } from '../types/editListingForm.type';
+import { useEditListingWizardRoute } from '../editListing.helper';
+import { EditListingForm } from '../types/editListingForm.type';
 
 const EditListing = () => {
-  const { listingId, wizardKey } =
-    useRoute<
-      RouteProp<
-        EditListingWizardParamList,
-        typeof EDIT_LISTING_SCREENS.EDIT_LISTING_PAGE
-      >
-    >().params;
+  const { listingId, wizardKey } = useEditListingWizardRoute().params;
 
   const isNewListing = !listingId;
 
   const existingListingType = useTypedSelector(state =>
-    listingId ? (state.marketplaceData[listingId] as Listing)?.type : undefined,
+    listingId
+      ? (state.marketplaceData.entities[listingId] as Listing)?.type
+      : undefined,
   );
 
-  const { control } = useForm<EditListingFormType>({
+  const formMethods = useForm<EditListingForm>({
     defaultValues: {
       type: existingListingType ?? undefined,
+      fields: {},
     },
   });
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>
-          {isNewListing ? 'Create Listing' : 'Edit Listing'}
-        </Text>
-        <Text style={styles.subtitle}>Wizard Key: {wizardKey}</Text>
+    <FormProvider {...formMethods}>
+      <ScrollView style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.title}>
+            {isNewListing ? 'Create Listing' : 'Edit Listing'}
+          </Text>
+          <Text style={styles.subtitle}>Wizard Key: {wizardKey}</Text>
 
-        {/* Listing Type Selection - Only show for new listings with multiple types */}
-        <SelectListingType control={control} listingId={listingId} />
+          <SelectListingType />
 
+          <SelectListingCategory />
 
-      </View>
-    </ScrollView>
+          <EditListingTitle />
+
+          <EditListingDescription />
+
+          <EditListingCustomFields />
+        </View>
+      </ScrollView>
+    </FormProvider>
   );
 };
 

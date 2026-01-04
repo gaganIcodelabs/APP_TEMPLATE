@@ -1,4 +1,4 @@
-import { EDIT_LISTING_WIZARD } from 'features/editListing';
+import { EDIT_LISTING_WIZARD } from '@features/editListing';
 
 const SCREENS = {
   // Auth screens
@@ -9,8 +9,8 @@ const SCREENS = {
   RESET_PASSWORD: 'ResetPassword',
 
   HOME: 'Home',
-} as const;
 
-Object.assign(SCREENS, EDIT_LISTING_WIZARD);
+  ...EDIT_LISTING_WIZARD,
+} as const;
 
 export { SCREENS };

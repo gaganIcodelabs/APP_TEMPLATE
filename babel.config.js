@@ -21,6 +21,7 @@ module.exports = {
           '@transactions': './src/transactions',
           '@appTypes': './src/types',
           '@util': './src/util',
+          '@features': './src/features',
         },
       },
     ],

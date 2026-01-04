@@ -3,12 +3,23 @@
 // In the codebase, we also have React Final Form fields, which are wrapper around user inputs.
 
 import {
-  isPurchaseProcessAlias,
+  CategoryNode,
+  EnumOption,
+  ListingField,
+  UserEnumOption,
+  UserFieldConfigItem,
+} from '@appTypes/config';
+import appSettings from '../config/settings';
+import {
+  SCHEMA_TYPE_MULTI_ENUM,
+  SCHEMA_TYPE_TEXT,
+  SCHEMA_TYPE_YOUTUBE,
+} from '../constants';
+import {
   isBookingProcessAlias,
   isNegotiationProcessAlias,
+  isPurchaseProcessAlias,
 } from '../transactions/transaction';
-import { SCHEMA_TYPE_MULTI_ENUM, SCHEMA_TYPE_TEXT, SCHEMA_TYPE_YOUTUBE } from '../constants';
-import appSettings from '../config/settings';
 
 const { stripeSupportedCurrencies, subUnitDivisors } = appSettings;
 
@@ -30,7 +41,10 @@ const keyMapping = {
   },
 };
 
-const getEntityTypeRestrictions = (entityTypeKey, config) => {
+const getEntityTypeRestrictions = (
+  entityTypeKey: keyof typeof keyMapping,
+  config: any,
+): { isLimited: boolean; limitToIds: string[] } => {
   const { wrapper, limitTo, ids } = keyMapping[entityTypeKey];
   const isLimited = config && config[wrapper] && config[wrapper][limitTo];
   const limitToIds = config && config[wrapper] && config[wrapper][ids];
@@ -46,8 +60,15 @@ const getEntityTypeRestrictions = (entityTypeKey, config) => {
  * @param {*} fieldConfig the config of a custom listing field
  * @returns true if listingTypeConfig allows the listingType
  */
-export const isFieldFor = (entityTypeKey, entityType, fieldConfig) => {
-  const { isLimited, limitToIds } = getEntityTypeRestrictions(entityTypeKey, fieldConfig);
+export const isFieldFor = (
+  entityTypeKey: keyof typeof keyMapping,
+  entityType: string | string[],
+  fieldConfig: ListingField | UserFieldConfigItem,
+) => {
+  const { isLimited, limitToIds } = getEntityTypeRestrictions(
+    entityTypeKey,
+    fieldConfig,
+  );
 
   if (Array.isArray(entityType)) {
     return !isLimited || limitToIds.some(cid => entityType.includes(cid));
@@ -55,12 +76,18 @@ export const isFieldFor = (entityTypeKey, entityType, fieldConfig) => {
   return !isLimited || limitToIds.includes(entityType);
 };
 
-export const isFieldForUserType = (userType, fieldConfig) =>
-  isFieldFor('userType', userType, fieldConfig);
-export const isFieldForListingType = (listingType, fieldConfig) =>
-  isFieldFor('listingType', listingType, fieldConfig);
-export const isFieldForCategory = (categories, fieldConfig) =>
-  isFieldFor('category', categories, fieldConfig);
+export const isFieldForUserType = (
+  userType: string,
+  fieldConfig: UserFieldConfigItem,
+) => isFieldFor('userType', userType, fieldConfig);
+export const isFieldForListingType = (
+  listingType: string,
+  fieldConfig: ListingField,
+) => isFieldFor('listingType', listingType, fieldConfig);
+export const isFieldForCategory = (
+  categories: string[],
+  fieldConfig: ListingField,
+) => isFieldFor('category', categories, fieldConfig);
 
 /**
  * Returns the value of the attribute in extended data.
@@ -68,7 +95,10 @@ export const isFieldForCategory = (categories, fieldConfig) =>
  * @param {*} key attribute key in extended data
  * @returns
  */
-export const getFieldValue = (data, key) => {
+export const getFieldValue = <T extends Record<string, any>, K extends string>(
+  data: T,
+  key: K,
+): T[K] | null => {
   const value = data?.[key];
   return value != null ? value : null;
 };
@@ -84,14 +114,19 @@ export const getFieldValue = (data, key) => {
  * @param {Array} categoryLevelOptions array of nested category structure
  * @returns pick valid prefixed properties
  */
-export const pickCategoryFields = (data, prefix, level, categoryLevelOptions = []) => {
+export const pickCategoryFields = (
+  data: Record<string, any>,
+  prefix: string,
+  level: number,
+  categoryLevelOptions: CategoryNode[] = [],
+): Record<string, string> => {
   const currentCategoryKey = `${prefix}${level}`;
   const currentCategoryValue = data[currentCategoryKey];
   const isCategoryLevelSet = typeof currentCategoryValue !== 'undefined';
 
   // Validate the value against category options
   const categoryOptionConfig = categoryLevelOptions.find(
-    category => category.id === currentCategoryValue
+    category => category.id === currentCategoryValue,
   );
   const isValidCategoryValue = !!categoryOptionConfig;
   const nextLevelOptions = categoryOptionConfig?.subcategories || [];
@@ -120,20 +155,28 @@ export const pickCategoryFields = (data, prefix, level, categoryLevelOptions = [
  * - or 'text' for SCHEMA_TYPE_TEXT
  */
 export const pickCustomFieldProps = (
-  publicData,
-  metadata,
-  fieldConfigs,
-  entityTypeKey,
-  shouldPickFn
+  publicData: Record<string, any>,
+  metadata: Record<string, any>,
+  fieldConfigs: ListingField[] | UserFieldConfigItem[],
+  entityTypeKey: keyof typeof keyMapping,
+  shouldPickFn: (config: ListingField | UserFieldConfigItem) => boolean,
 ) => {
   return fieldConfigs?.reduce((pickedElements, config) => {
-    const { key, enumOptions, schemaType, scope = 'public', showConfig } = config;
-    const { label, unselectedOptions: showUnselectedOptions } = showConfig || {};
+    const {
+      key,
+      enumOptions,
+      schemaType,
+      scope = 'public',
+      showConfig,
+    } = config;
+    const { label, unselectedOptions: showUnselectedOptions } =
+      showConfig || {};
     const entityType = publicData && publicData[entityTypeKey];
     const isTargetEntityType = isFieldFor(entityTypeKey, entityType, config);
 
-    const createFilterOptions = options =>
-      options.map(o => ({ key: `${o.option}`, label: o.label }));
+    const createFilterOptions = (
+      options: EnumOption[] | UserEnumOption[] | undefined,
+    ) => options?.map(o => ({ key: `${o.option}`, label: o.label })) || [];
 
     const shouldPick = shouldPickFn ? shouldPickFn(config) : true;
 
@@ -144,7 +187,9 @@ export const pickCustomFieldProps = (
         ? getFieldValue(metadata, key)
         : null;
 
-    return isTargetEntityType && schemaType === SCHEMA_TYPE_MULTI_ENUM && shouldPick
+    return isTargetEntityType &&
+      schemaType === SCHEMA_TYPE_MULTI_ENUM &&
+      shouldPick
       ? [
           ...pickedElements,
           {
@@ -156,7 +201,10 @@ export const pickCustomFieldProps = (
             showUnselectedOptions: showUnselectedOptions !== false,
           },
         ]
-      : isTargetEntityType && !!value && config.schemaType === SCHEMA_TYPE_TEXT && shouldPick
+      : isTargetEntityType &&
+        !!value &&
+        config.schemaType === SCHEMA_TYPE_TEXT &&
+        shouldPick
       ? [
           ...pickedElements,
           {
@@ -177,7 +225,7 @@ export const pickCustomFieldProps = (
           },
         ]
       : pickedElements;
-  }, []);
+  }, [] as { schemaType: string; key: string; heading?: string; options?: { key: string; label: string }[]; selectedOptions?: string[]; showUnselectedOptions?: boolean }[]);
 };
 
 /**
@@ -203,9 +251,9 @@ export const pickCustomFieldProps = (
  *    b) The process is Stripe-compatible with a Stripe-supported currency.
  */
 export const isValidCurrencyForTransactionProcess = (
-  transactionProcessAlias,
-  listingCurrency,
-  paymentProcessor = null
+  transactionProcessAlias: string,
+  listingCurrency: string,
+  paymentProcessor: string | null = null,
 ) => {
   // booking and purchase processes use Stripe actions.
   const isStripeRelatedProcess =
@@ -214,7 +262,8 @@ export const isValidCurrencyForTransactionProcess = (
     isNegotiationProcessAlias(transactionProcessAlias);
 
   // Determine if the listing currency is supported by Stripe
-  const isStripeSupportedCurrency = stripeSupportedCurrencies.includes(listingCurrency);
+  const isStripeSupportedCurrency =
+    stripeSupportedCurrencies.includes(listingCurrency);
 
   if (paymentProcessor === 'stripe') {
     // If using Stripe, only return true if both process and currency are compatible with Stripe
@@ -223,7 +272,8 @@ export const isValidCurrencyForTransactionProcess = (
     // If payment processor is not specified, allow any non-stripe related process with valid subunits or Stripe-related processes with supported currency
     return (
       (isStripeRelatedProcess && isStripeSupportedCurrency) ||
-      (!isStripeRelatedProcess && Object.keys(subUnitDivisors).includes(listingCurrency))
+      (!isStripeRelatedProcess &&
+        Object.keys(subUnitDivisors).includes(listingCurrency))
     );
   }
 };

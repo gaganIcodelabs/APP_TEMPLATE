@@ -192,7 +192,7 @@ The component includes several styled sections:
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `control` | `Control<EditListingFormType>` | React Hook Form control object |
+| `control` | `Control<EditListingStaticForm>` | React Hook Form control object |
 | `listingId` | `string` | ID of the listing being edited (optional for new listings) |
 | `watch` | `UseFormWatch` | React Hook Form watch function |
 

@@ -3,12 +3,11 @@ import { ListingField } from '@appTypes/config/configListing';
 import { CommonTextInput } from '@components/index';
 import { SCHEMA_TYPE_LONG } from '@constants/schemaTypes';
 import { Control } from 'react-hook-form';
-import { SignupFormValues } from '../../screens/Signup/Signup.types';
 import { getLabel } from './CustomExtendedDataField';
 
 type CustomFieldTextPropsBase = {
   name: string;
-  control: Control<SignupFormValues>;
+  control: Control;
 };
 
 type CustomFieldTextPropsUser = CustomFieldTextPropsBase & {

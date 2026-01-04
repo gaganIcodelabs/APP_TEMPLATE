@@ -9,7 +9,6 @@ import {
 } from '@constants/schemaTypes';
 import { Control } from 'react-hook-form';
 import { Text } from 'react-native';
-import { SignupFormValues } from '../../screens/Signup/Signup.types';
 import { CustomFieldMultiselect } from './CustomFieldMultiselect';
 import CustomFieldSingleSelect from './CustomFieldSingleSelect';
 import CustomFieldText from './CustomFieldText';
@@ -17,7 +16,7 @@ import { CustomFieldYoutube } from './CustomFieldYoutube';
 
 type CustomExtendedDataFieldPropsBase = {
   name: string;
-  control: Control<SignupFormValues>;
+  control: Control<any>;
 };
 
 type CustomExtendedDataFieldPropsUser = CustomExtendedDataFieldPropsBase & {

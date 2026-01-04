@@ -99,7 +99,7 @@ export interface UserFieldNumberConfig {
 export interface UserFieldConfigItem {
   key: string;
   // scope: string;
-  scope: 'private' | 'protected' | 'public' | 'meta';
+  scope: 'private' | 'protected' | 'public' | 'meta' | 'metadata';
   label?: string;
 
   schemaType: UserSchemaType;
