@@ -3,3 +3,4 @@ export * from './CommonTextInput/CommonTextInput';
 export * from './CheckBox/CheckBox';
 export * from './Button/Button';
 export * from './RadioList';
+export * from './LocationModal';

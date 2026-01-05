@@ -1286,32 +1286,32 @@ const validUserFields = (
 ///////////////////////////////////
 
 const validListingTypes = (
-  listingTypes: Array<{
+  listingTypes: Array<
+    {
+      listingType: string;
+      transactionType: TransactionType;
+      // label: string;
+      // priceVariations?: { enabled: boolean };
+      // [key: string]: unknown;
+    } & ListingType
+  >,
+): Array<
+  {
     listingType: string;
-    label: string;
     transactionType: TransactionType;
-    priceVariations?: { enabled: boolean };
-    [key: string]: unknown;
-  }>,
-): Array<{
-  listingType: string;
-  label: string;
-  transactionType: TransactionType;
-  priceVariations?: { enabled: boolean };
-  [key: string]: unknown;
-}> => {
+  } & ListingType
+> => {
   // Check what transaction processes this client app supports
   const supportedProcessesInfo = getSupportedProcessesInfo();
 
   const validTypes = listingTypes.reduce(
     (
-      validConfigs: Array<{
-        listingType: string;
-        label: string;
-        transactionType: TransactionType;
-        priceVariations?: { enabled: boolean };
-        [key: string]: unknown;
-      }>,
+      validConfigs: Array<
+        {
+          listingType: string;
+          transactionType: TransactionType;
+        } & ListingType
+      >,
       listingType,
     ) => {
       const {

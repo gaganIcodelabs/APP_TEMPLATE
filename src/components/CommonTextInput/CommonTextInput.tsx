@@ -20,6 +20,7 @@ interface TextInputFieldProps extends TextInputProps {
   control: any;
   name: string;
   labelKey?: string;
+  labelValue?: string;
   isPassword?: boolean;
   style?: ViewStyle;
   rightIcon?: ImageSourcePropType;
@@ -29,6 +30,7 @@ interface TextInputFieldProps extends TextInputProps {
   rightLabelKey?: string;
   labelStyle?: TextStyle;
   rightLabelStyle?: TextStyle;
+  rightLabelValue?: string;
   onTextChange?: (text: string, cb: (value: string | number) => void) => void;
 }
 
@@ -36,12 +38,14 @@ export const CommonTextInput = ({
   control,
   name,
   labelKey,
+  labelValue,
   isPassword = false,
   style = {},
   onRightLabelPress = () => {},
   onTextChange,
   inputContainerStyles = {},
   rightLabelKey,
+  rightLabelValue,
   labelStyle = {},
   rightLabelStyle = {},
   rightIcon,
@@ -64,17 +68,17 @@ export const CommonTextInput = ({
         fieldState: { error },
       }) => (
         <View style={[styles.container, style]}>
-          {labelKey && (
+          {(labelKey || labelValue) && (
             <View style={styles.labelContainer}>
-              {labelKey && (
+              {(labelKey || labelValue) && (
                 <CommonText style={[styles.text, labelStyle]}>
-                  {t(labelKey)}
+                  {labelKey ? t(labelKey) : labelValue}
                 </CommonText>
               )}
-              {rightLabelKey && (
+              {(rightLabelKey || rightLabelValue) && (
                 <TouchableOpacity onPress={onRightLabelPress}>
                   <Text style={[styles.text, rightLabelStyle]}>
-                    {t(rightLabelKey)}
+                    {rightLabelKey ? t(rightLabelKey) : rightLabelValue}
                   </Text>
                 </TouchableOpacity>
               )}
