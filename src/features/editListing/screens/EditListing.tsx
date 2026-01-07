@@ -10,6 +10,9 @@ import SelectListingType from '../components/SelectListingType';
 import { useEditListingWizardRoute } from '../editListing.helper';
 import { EditListingForm } from '../types/editListingForm.type';
 import EditListingLocation from '../components/EditListingLocation';
+import EditListingPricing from '../components/EditListingPricing';
+import EditListingPricingAndStock from '../components/EditListingPricingAndStock';
+import EditListingPriceVariations from '../components/EditListingPriceVariations';
 
 const EditListing = () => {
   const { listingId, wizardKey } = useEditListingWizardRoute().params;
@@ -53,6 +56,12 @@ const EditListing = () => {
           <EditListingCustomFields />
 
           <EditListingLocation />
+
+          <EditListingPricing />
+
+          <EditListingPriceVariations />
+
+          <EditListingPricingAndStock />
         </View>
       </ScrollView>
     </FormProvider>
