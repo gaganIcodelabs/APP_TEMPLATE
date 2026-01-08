@@ -33,7 +33,7 @@ type EditListingStaticForm = {
   };
   price?: number; // Price in minor units (cents)
   stock?: number; // Stock quantity
-  stockTypeInfinity?: string[] | boolean; // For infinite stock checkbox
+  stockTypeInfinity?: boolean; // For infinite stock checkbox
   priceVariants?: PriceVariant[]; // For booking listings with price variations
   bookingLengthInMinutes?: number; // For simple FIXED unit type bookings
   startTimeInterval?: 'hour' | 'halfHour' | 'quarterHour'; // For FIXED unit type bookings

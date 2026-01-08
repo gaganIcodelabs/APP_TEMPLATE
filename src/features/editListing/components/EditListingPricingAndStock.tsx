@@ -9,13 +9,8 @@ import { useIsShowStock } from '../hooks/useIsShowStock';
 import { EditListingForm } from '../types/editListingForm.type';
 
 // Stock type constants (matching web-template)
-const STOCK_ONE_ITEM = 'oneItem';
 const STOCK_MULTIPLE_ITEMS = 'multipleItems';
-const STOCK_INFINITE_ONE_ITEM = 'infiniteOneItem';
-const STOCK_INFINITE_MULTIPLE_ITEMS = 'infiniteMultipleItems';
-const STOCK_INFINITE_ITEMS = [STOCK_INFINITE_ONE_ITEM, STOCK_INFINITE_MULTIPLE_ITEMS];
 
-const MILLION = 1000000;
 
 const EditListingPricingAndStock = () => {
   const listingId = useEditListingWizardRoute().params.listingId;
