@@ -39,6 +39,15 @@ type EditListingStaticForm = {
   startTimeInterval?: 'hour' | 'halfHour' | 'quarterHour'; // For FIXED unit type bookings
   availabilityPlan?: AvailabilityPlan; // For calendar bookings
   availabilityExceptions?: AvailabilityException[]; // For calendar bookings
+  // Delivery fields
+  deliveryOptions?: ('pickup' | 'shipping')[]; // Selected delivery options
+  pickupLocation?: {
+    origin: [number, number]; // [latitude, longitude]
+    address: string;
+    building?: string;
+  };
+  shippingPriceOneItem?: string; // Shipping price for one item (as string for input)
+  shippingPriceAdditionalItems?: string; // Shipping price for additional items (as string for input)
 };
 
 type EditListingDynamicForm = {

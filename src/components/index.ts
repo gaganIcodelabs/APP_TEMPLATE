@@ -1,5 +1,6 @@
 export * from './CommonText/CommonText';
 export * from './CommonTextInput/CommonTextInput';
+export * from './CommonCheckbox/CommonCheckbox';
 export * from './CheckBox/CheckBox';
 export * from './Button/Button';
 export * from './RadioList';

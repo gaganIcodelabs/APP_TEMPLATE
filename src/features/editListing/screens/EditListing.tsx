@@ -14,6 +14,7 @@ import EditListingPricing from '../components/EditListingPricing';
 import EditListingPricingAndStock from '../components/EditListingPricingAndStock';
 import EditListingPriceVariations from '../components/EditListingPriceVariations';
 import EditListingAvailability from '../components/EditListingAvailability';
+import EditListingDelivery from '../components/EditListingDelivery';
 
 const EditListing = () => {
   const { listingId, wizardKey } = useEditListingWizardRoute().params;
@@ -65,6 +66,8 @@ const EditListing = () => {
           <EditListingAvailability />
 
           <EditListingPricingAndStock />
+
+          <EditListingDelivery />
         </View>
       </ScrollView>
     </FormProvider>
