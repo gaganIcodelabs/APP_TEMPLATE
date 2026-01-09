@@ -1,7 +1,7 @@
 import { CommonCheckbox, CommonTextInput } from '@components/index';
 import { LocationModal, LocationSuggestion } from '@components/LocationModal';
 import { useState } from 'react';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useEditListingWizardRoute } from '../editListing.helper';
 import { useIsCompatibleCurrency } from '../hooks/useIsCompatibleCurrency';
@@ -10,15 +10,22 @@ import { useIsShowDelivery } from '../hooks/useIsShowDelivery';
 
 const EditListingDelivery = () => {
   const listingId = useEditListingWizardRoute().params.listingId;
-  const { control, setValue, getValues, watch } = useFormContext<EditListingForm>();
+  const { control, setValue, getValues } = useFormContext<EditListingForm>();
   const isCompatibleCurrency = useIsCompatibleCurrency(listingId);
   const { showPickup, showShipping } = useIsShowDelivery();
   const [isLocationModalVisible, setIsLocationModalVisible] = useState(false);
 
   // Watch delivery options to show/hide fields
-  const deliveryOptions = watch('deliveryOptions') || [];
-  const pickupEnabled = deliveryOptions.includes('pickup');
-  const shippingEnabled = deliveryOptions.includes('shipping');
+  const {pickupEnabled, shippingEnabled} = useWatch({
+    control,
+    name: 'deliveryOptions',
+    compute: (data: EditListingForm['deliveryOptions'])=>{
+      return {
+        pickupEnabled: data?.includes('pickup') || false,
+        shippingEnabled: data?.includes('shipping') || false
+      }
+    }
+  })
 
   const initialAddress = getValues('pickupLocation.address');
 

@@ -24,7 +24,7 @@ const WEEKDAYS = [
  */
 const EditListingAvailability: React.FC = () => {
   const isShowAvailability = useIsShowAvailability();
-  const { control, setValue } = useFormContext<EditListingForm>();
+  const { control, setValue, getValues } = useFormContext<EditListingForm>();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isExceptionModalVisible, setIsExceptionModalVisible] = useState(false);
 
@@ -50,7 +50,7 @@ const EditListingAvailability: React.FC = () => {
   };
 
   const handleSaveException = (exception: AvailabilityException) => {
-    const currentPlan = control._formValues.availabilityPlan;
+    const currentPlan = getValues('availabilityPlan');
     const currentExceptions = currentPlan?.exceptions || [];
     
     setValue('availabilityPlan', {
@@ -64,7 +64,7 @@ const EditListingAvailability: React.FC = () => {
       'Delete Exception',
       'Are you sure you want to delete this exception?',
       () => {
-        const currentPlan = control._formValues.availabilityPlan;
+        const currentPlan = getValues('availabilityPlan');
         const currentExceptions = currentPlan?.exceptions || [];
         const newExceptions = currentExceptions.filter((_: AvailabilityException, i: number) => i !== index);
         
