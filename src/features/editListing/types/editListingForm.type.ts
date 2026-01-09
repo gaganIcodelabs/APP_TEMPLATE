@@ -24,6 +24,11 @@ export type AvailabilityException = {
   seats: number; // 0 means unavailable
 };
 
+export type ImageItem = {
+  id: string;
+  uri: string;
+};
+
 type EditListingStaticForm = {
   type: string | undefined;
   title: string;
@@ -32,6 +37,7 @@ type EditListingStaticForm = {
     address: string;
     building?: string;
   };
+  images?: ImageItem[]; // Array of uploaded images
   price?: number; // Price in minor units (cents)
   stock?: number; // Stock quantity
   stockTypeInfinity?: boolean; // For infinite stock checkbox

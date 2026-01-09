@@ -1,10 +1,17 @@
-import { createAsyncThunk, createSlice, createEntityAdapter, EntityState } from '@reduxjs/toolkit';
+import {
+  createAsyncThunk,
+  createSlice,
+  createEntityAdapter,
+  EntityState,
+} from '@reduxjs/toolkit';
 import { Thunk, StorableError } from '@appTypes/index';
 import { OwnListing } from '@appTypes/entities/listing';
+import { ListingImageLayout } from '@appTypes/config/configLayoutAndBranding';
 import { RootState } from '@redux/store';
 import { storableError } from '@util/errors';
 import { denormalisedResponseEntities, updatedEntities } from '@util/data';
 import { addMarketplaceEntities } from '@redux/slices/marketplaceData.slice';
+import { getImageVariantInfo } from './editListing.helper';
 
 // ================ Entity Adapter ================ //
 
@@ -13,15 +20,15 @@ export interface EditListingEntity {
   id: string; // The editListing wizard.key from React Navigation (required by EntityAdapter)
   wizardKey: string; // Same as id, kept for clarity
   currentListing: OwnListing | null;
-  
+
   // Create listing
   createListingInProgress: boolean;
   createListingError: StorableError | null;
-  
+
   // Update listing
   updateListingInProgress: boolean;
   updateListingError: StorableError | null;
-  
+
   // Fetch listing
   fetchListingInProgress: boolean;
   fetchListingError: StorableError | null;
@@ -35,10 +42,13 @@ const editListingAdapter = createEntityAdapter<EditListingEntity>();
 const initialState = editListingAdapter.getInitialState();
 
 // Helper to get or create entity for a editListing wizard
-const getOrCreateEntity = (state: EntityState<EditListingEntity, string>, wizardKey: string): EditListingEntity => {
+const getOrCreateEntity = (
+  state: EntityState<EditListingEntity, string>,
+  wizardKey: string,
+): EditListingEntity => {
   const existing = state.entities[wizardKey];
   if (existing) return existing;
-  
+
   return {
     id: wizardKey,
     wizardKey,
@@ -72,25 +82,27 @@ export const createListing = createAsyncThunk<
   'editListing/createListing',
   async (params, { dispatch, extra: sdk, rejectWithValue }) => {
     const { wizardKey, ...listingParams } = params;
-    
+
     try {
-      const response = await sdk.ownListings?.create(listingParams, { expand: true });
-      
+      const response = await sdk.ownListings?.create(listingParams, {
+        expand: true,
+      });
+
       const apiResponse = response.data;
       const entities = updatedEntities({}, apiResponse);
       dispatch(addMarketplaceEntities({ entities }));
-      
+
       const denormalisedEntities = denormalisedResponseEntities(response);
       if (denormalisedEntities.length !== 1) {
         throw new Error('Expected a single listing in the response');
       }
-      
+
       return { wizardKey, listing: denormalisedEntities[0] as OwnListing };
     } catch (error: any) {
       console.log('Error creating listing:', error);
       return rejectWithValue({ wizardKey, error: storableError(error) });
     }
-  }
+  },
 );
 
 export const updateListing = createAsyncThunk<
@@ -112,28 +124,28 @@ export const updateListing = createAsyncThunk<
   'editListing/updateListing',
   async (params, { dispatch, extra: sdk, rejectWithValue }) => {
     const { wizardKey, id, ...updateParams } = params;
-    
+
     try {
       const response = await sdk.ownListings?.update(
         { id: id as any, ...updateParams },
-        { expand: true }
+        { expand: true },
       );
-      
+
       const apiResponse = response.data;
       const entities = updatedEntities({}, apiResponse);
       dispatch(addMarketplaceEntities({ entities }));
-      
+
       const denormalisedEntities = denormalisedResponseEntities(response);
       if (denormalisedEntities.length !== 1) {
         throw new Error('Expected a single listing in the response');
       }
-      
+
       return { wizardKey, listing: denormalisedEntities[0] as OwnListing };
     } catch (error: any) {
       console.log('Error updating listing:', error);
       return rejectWithValue({ wizardKey, error: storableError(error) });
     }
-  }
+  },
 );
 
 export const fetchOwnListing = createAsyncThunk<
@@ -146,24 +158,60 @@ export const fetchOwnListing = createAsyncThunk<
     try {
       const response = await sdk.ownListings?.show(
         { id: id as any },
-        { expand: true }
+        { expand: true },
       );
-      
+
       const apiResponse = response.data;
       const entities = updatedEntities({}, apiResponse);
       dispatch(addMarketplaceEntities({ entities }));
-      
+
       const denormalisedEntities = denormalisedResponseEntities(response);
       if (denormalisedEntities.length !== 1) {
         throw new Error('Expected a single listing in the response');
       }
-      
+
       return { wizardKey, listing: denormalisedEntities[0] as OwnListing };
     } catch (error: any) {
       console.log('Error fetching listing:', error);
       return rejectWithValue({ wizardKey, error: storableError(error) });
     }
-  }
+  },
+);
+
+export const requestImageUpload = createAsyncThunk<
+  any,
+  {
+    file: {
+      uri: string;
+      id: string;
+      type: string;
+      name: string;
+    };
+    listingImageConfig: ListingImageLayout;
+  },
+  Thunk
+>(
+  'editListing/requestImageUploadStatus',
+  async (actionPayload, { extra: sdk }) => {
+    try {
+      const { listingImageConfig, file } = actionPayload;
+
+      const imageVariantInfo = getImageVariantInfo(listingImageConfig);
+      const queryParams = {
+        expand: true,
+        'fields.image': imageVariantInfo.fieldsImage,
+        ...imageVariantInfo.imageVariants,
+      };
+
+      const res = await sdk.images?.upload(
+        { image: file } as any,
+        queryParams as any,
+      );
+      return res;
+    } catch (error) {
+      return storableError(error as any);
+    }
+  },
 );
 
 // ================ Slice ================ //
@@ -179,13 +227,13 @@ const editListingSlice = createSlice({
         editListingAdapter.addOne(state, getOrCreateEntity(state, wizardKey));
       }
     },
-    
+
     // Clear state for a specific editListing wizard (when screen is unmounted)
     clearEditListingWizard: (state, action: { payload: string }) => {
       const wizardKey = action.payload;
       editListingAdapter.removeOne(state, wizardKey);
     },
-    
+
     // Clear listing for a specific editListing wizard
     clearCurrentListing: (state, action: { payload: string }) => {
       const wizardKey = action.payload;
@@ -202,14 +250,21 @@ const editListingSlice = createSlice({
         });
       }
     },
-    
+
     // Set listing for a specific editListing wizard
-    setCurrentListing: (state, action: { payload: { wizardKey: string; listing: OwnListing } }) => {
+    setCurrentListing: (
+      state,
+      action: { payload: { wizardKey: string; listing: OwnListing } },
+    ) => {
       const { wizardKey, listing } = action.payload;
-      const entity = state.entities[wizardKey] || getOrCreateEntity(state, wizardKey);
-      
+      const entity =
+        state.entities[wizardKey] || getOrCreateEntity(state, wizardKey);
+
       if (!state.entities[wizardKey]) {
-        editListingAdapter.addOne(state, { ...entity, currentListing: listing });
+        editListingAdapter.addOne(state, {
+          ...entity,
+          currentListing: listing,
+        });
       } else {
         editListingAdapter.updateOne(state, {
           id: wizardKey,
@@ -217,7 +272,7 @@ const editListingSlice = createSlice({
         });
       }
     },
-    
+
     // Clear errors for a specific editListing wizard
     clearErrors: (state, action: { payload: string }) => {
       const wizardKey = action.payload;
@@ -234,13 +289,14 @@ const editListingSlice = createSlice({
       }
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     // Create listing
     builder
       .addCase(createListing.pending, (state, action) => {
         const wizardKey = action.meta.arg.wizardKey;
-        const entity = state.entities[wizardKey] || getOrCreateEntity(state, wizardKey);
-        
+        const entity =
+          state.entities[wizardKey] || getOrCreateEntity(state, wizardKey);
+
         if (!state.entities[wizardKey]) {
           editListingAdapter.addOne(state, {
             ...entity,
@@ -269,9 +325,11 @@ const editListingSlice = createSlice({
         });
       })
       .addCase(createListing.rejected, (state, action) => {
-        const wizardKey = (action.payload as any)?.wizardKey || action.meta.arg.wizardKey;
-        const error = (action.payload as any)?.error || (action.payload as StorableError);
-        
+        const wizardKey =
+          (action.payload as any)?.wizardKey || action.meta.arg.wizardKey;
+        const error =
+          (action.payload as any)?.error || (action.payload as StorableError);
+
         if (state.entities[wizardKey]) {
           editListingAdapter.updateOne(state, {
             id: wizardKey,
@@ -282,13 +340,14 @@ const editListingSlice = createSlice({
           });
         }
       });
-    
+
     // Update listing
     builder
       .addCase(updateListing.pending, (state, action) => {
         const wizardKey = action.meta.arg.wizardKey;
-        const entity = state.entities[wizardKey] || getOrCreateEntity(state, wizardKey);
-        
+        const entity =
+          state.entities[wizardKey] || getOrCreateEntity(state, wizardKey);
+
         if (!state.entities[wizardKey]) {
           editListingAdapter.addOne(state, {
             ...entity,
@@ -317,9 +376,11 @@ const editListingSlice = createSlice({
         });
       })
       .addCase(updateListing.rejected, (state, action) => {
-        const wizardKey = (action.payload as any)?.wizardKey || action.meta.arg.wizardKey;
-        const error = (action.payload as any)?.error || (action.payload as StorableError);
-        
+        const wizardKey =
+          (action.payload as any)?.wizardKey || action.meta.arg.wizardKey;
+        const error =
+          (action.payload as any)?.error || (action.payload as StorableError);
+
         if (state.entities[wizardKey]) {
           editListingAdapter.updateOne(state, {
             id: wizardKey,
@@ -330,13 +391,14 @@ const editListingSlice = createSlice({
           });
         }
       });
-    
+
     // Fetch listing
     builder
       .addCase(fetchOwnListing.pending, (state, action) => {
         const wizardKey = action.meta.arg.wizardKey;
-        const entity = state.entities[wizardKey] || getOrCreateEntity(state, wizardKey);
-        
+        const entity =
+          state.entities[wizardKey] || getOrCreateEntity(state, wizardKey);
+
         if (!state.entities[wizardKey]) {
           editListingAdapter.addOne(state, {
             ...entity,
@@ -365,9 +427,11 @@ const editListingSlice = createSlice({
         });
       })
       .addCase(fetchOwnListing.rejected, (state, action) => {
-        const wizardKey = (action.payload as any)?.wizardKey || action.meta.arg.wizardKey;
-        const error = (action.payload as any)?.error || (action.payload as StorableError);
-        
+        const wizardKey =
+          (action.payload as any)?.wizardKey || action.meta.arg.wizardKey;
+        const error =
+          (action.payload as any)?.error || (action.payload as StorableError);
+
         if (state.entities[wizardKey]) {
           editListingAdapter.updateOne(state, {
             id: wizardKey,
@@ -383,12 +447,12 @@ const editListingSlice = createSlice({
 
 // ================ Actions ================ //
 
-export const { 
+export const {
   initializeEditListingWizard,
   clearEditListingWizard,
-  clearCurrentListing, 
-  setCurrentListing, 
-  clearErrors 
+  clearCurrentListing,
+  setCurrentListing,
+  clearErrors,
 } = editListingSlice.actions;
 
 export default editListingSlice.reducer;
@@ -407,23 +471,29 @@ export const {
 export const selectEditListingState = (state: RootState) => state.editListing;
 
 // Selectors for a specific editListing wizard
-export const selectCurrentListing = (state: RootState, wizardKey: string) => 
+export const selectCurrentListing = (state: RootState, wizardKey: string) =>
   selectRouteEntity(state, wizardKey)?.currentListing || null;
 
-export const selectCreateListingInProgress = (state: RootState, wizardKey: string) =>
-  selectRouteEntity(state, wizardKey)?.createListingInProgress || false;
+export const selectCreateListingInProgress = (
+  state: RootState,
+  wizardKey: string,
+) => selectRouteEntity(state, wizardKey)?.createListingInProgress || false;
 
 export const selectCreateListingError = (state: RootState, wizardKey: string) =>
   selectRouteEntity(state, wizardKey)?.createListingError || null;
 
-export const selectUpdateListingInProgress = (state: RootState, wizardKey: string) =>
-  selectRouteEntity(state, wizardKey)?.updateListingInProgress || false;
+export const selectUpdateListingInProgress = (
+  state: RootState,
+  wizardKey: string,
+) => selectRouteEntity(state, wizardKey)?.updateListingInProgress || false;
 
 export const selectUpdateListingError = (state: RootState, wizardKey: string) =>
   selectRouteEntity(state, wizardKey)?.updateListingError || null;
 
-export const selectFetchListingInProgress = (state: RootState, wizardKey: string) =>
-  selectRouteEntity(state, wizardKey)?.fetchListingInProgress || false;
+export const selectFetchListingInProgress = (
+  state: RootState,
+  wizardKey: string,
+) => selectRouteEntity(state, wizardKey)?.fetchListingInProgress || false;
 
 export const selectFetchListingError = (state: RootState, wizardKey: string) =>
   selectRouteEntity(state, wizardKey)?.fetchListingError || null;
@@ -431,4 +501,3 @@ export const selectFetchListingError = (state: RootState, wizardKey: string) =>
 // Helper selector to check if a editListing wizard is initialized
 export const selectIsRouteInitialized = (state: RootState, wizardKey: string) =>
   !!selectRouteEntity(state, wizardKey);
-
