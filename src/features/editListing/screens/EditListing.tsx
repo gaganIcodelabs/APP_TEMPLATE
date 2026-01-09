@@ -13,6 +13,9 @@ import EditListingLocation from '../components/EditListingLocation';
 import EditListingPricing from '../components/EditListingPricing';
 import EditListingPricingAndStock from '../components/EditListingPricingAndStock';
 import EditListingPriceVariations from '../components/EditListingPriceVariations';
+import EditListingAvailability from '../components/EditListingAvailability';
+import EditListingDelivery from '../components/EditListingDelivery';
+import EditListingPhotos from '../components/EditListingPhotos';
 
 const EditListing = () => {
   const { listingId, wizardKey } = useEditListingWizardRoute().params;
@@ -32,6 +35,7 @@ const EditListing = () => {
         origin: [],
         address: '',
       },
+      images: [],
       fields: {},
     },
   });
@@ -61,7 +65,13 @@ const EditListing = () => {
 
           <EditListingPriceVariations />
 
+          <EditListingAvailability />
+
           <EditListingPricingAndStock />
+
+          <EditListingDelivery />
+
+          <EditListingPhotos />
         </View>
       </ScrollView>
     </FormProvider>
@@ -75,6 +85,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingBottom: 50,
   },
   title: {
     fontSize: 24,
