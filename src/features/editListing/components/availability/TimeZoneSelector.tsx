@@ -1,91 +1,53 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { CommonSelect } from '@components/index';
+import { ModalSelect } from '@components/index';
+import { useFormContext } from 'react-hook-form';
 
-// Common timezones - you can expand this list
-const TIMEZONES = [
-  'Africa/Cairo',
-  'Africa/Johannesburg',
-  'Africa/Lagos',
-  'America/Anchorage',
+// Common timezones
+const COMMON_TIMEZONES = [
+  'America/New_York',
   'America/Chicago',
   'America/Denver',
   'America/Los_Angeles',
-  'America/Mexico_City',
-  'America/New_York',
-  'America/Phoenix',
-  'America/Sao_Paulo',
+  'America/Anchorage',
+  'Pacific/Honolulu',
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Europe/Madrid',
+  'Europe/Rome',
+  'Europe/Amsterdam',
+  'Asia/Tokyo',
+  'Asia/Shanghai',
+  'Asia/Hong_Kong',
+  'Asia/Singapore',
+  'Asia/Dubai',
+  'Asia/Kolkata',
+  'Australia/Sydney',
+  'Australia/Melbourne',
+  'Pacific/Auckland',
   'America/Toronto',
   'America/Vancouver',
-  'Asia/Bangkok',
-  'Asia/Calcutta',
-  'Asia/Dubai',
-  'Asia/Hong_Kong',
-  'Asia/Jakarta',
-  'Asia/Kolkata',
-  'Asia/Manila',
-  'Asia/Seoul',
-  'Asia/Shanghai',
-  'Asia/Singapore',
-  'Asia/Tokyo',
-  'Atlantic/Reykjavik',
-  'Australia/Melbourne',
-  'Australia/Perth',
-  'Australia/Sydney',
-  'Europe/Amsterdam',
-  'Europe/Athens',
-  'Europe/Berlin',
-  'Europe/Brussels',
-  'Europe/Dublin',
-  'Europe/Helsinki',
-  'Europe/Istanbul',
-  'Europe/Lisbon',
-  'Europe/London',
-  'Europe/Madrid',
-  'Europe/Moscow',
-  'Europe/Oslo',
-  'Europe/Paris',
-  'Europe/Prague',
-  'Europe/Rome',
-  'Europe/Stockholm',
-  'Europe/Vienna',
-  'Europe/Warsaw',
-  'Europe/Zurich',
-  'Pacific/Auckland',
-  'Pacific/Fiji',
-  'Pacific/Honolulu',
+  'America/Mexico_City',
+  'America/Sao_Paulo',
+  'Africa/Cairo',
+  'Africa/Johannesburg',
 ];
 
-interface TimeZoneSelectorProps {
-  value: string;
-  onChange: (timezone: string) => void;
-}
+/**
+ * TimeZoneSelector Component
+ * Uses form control to select timezone
+ */
+export const TimeZoneSelector: React.FC = () => {
+  const { control } = useFormContext();
 
-export const TimeZoneSelector: React.FC<TimeZoneSelectorProps> = ({ value, onChange }) => {
-  const options = TIMEZONES.map(tz => ({ label: tz, value: tz }));
-
+  const options = COMMON_TIMEZONES.map(tz => ({ label: tz, value: tz }));
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Select a time zone</Text>
-      <CommonSelect
-        value={value}
-        onChange={onChange}
-        options={options}
-        placeholder="Pick a timezone..."
-      />
-    </View>
+    <ModalSelect
+      control={control}
+      name="localPlan.timezone"
+      options={options}
+      placeholder="Pick a timezone..."
+      labelValue="Select a time zone"
+    />
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 8,
-  },
-});
-

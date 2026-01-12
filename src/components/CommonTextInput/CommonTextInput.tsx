@@ -90,13 +90,13 @@ export const CommonTextInput = ({
               styles.inputContainer,
               inputContainerStyles,
               //   isFocused && { borderColor: colors.marketplaceColor },
-              //   multiline && {
-              //     height: undefined,
-              //     minHeight: (150),
-              //     maxHeight: (250),
-              //     alignItems: 'flex-start',
-              //     paddingVertical: (10),
-              //   },
+                textInputProps.multiline && {
+                  height: undefined,
+                  minHeight: (150),
+                  maxHeight: (250),
+                  alignItems: 'flex-start',
+                  paddingVertical: (10),
+                },
             ]}
           >
             {rightIcon && (

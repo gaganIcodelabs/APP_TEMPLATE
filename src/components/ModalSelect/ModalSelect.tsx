@@ -53,148 +53,139 @@ export const ModalSelect: React.FC<ModalSelectProps> = ({
   style,
   disabled = false,
   options,
+  onValueChange,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useTranslation();
 
-  // const selectedOption = options.find(opt => opt.value === value);
-  // const displayText = selectedOption ? selectedOption.label : placeholder;
   const isDisabled = disabled || options.length === 0;
 
   return (
-    <>
-      <Controller
-        control={control}
-        name={name}
-        render={({ field: { value, onChange }, fieldState: { error } }) => (
-          <View style={style}>
-            {(labelTranslationKey || labelValue) && (
-              <View>
-                {(labelTranslationKey || labelValue) && (
-                  <CommonText style={labelStyle}>
-                    {labelTranslationKey ? t(labelTranslationKey) : labelValue}
-                  </CommonText>
-                )}
-                {(rightLabelTranslationKey || rightLabelValue) && (
-                  <TouchableOpacity onPress={onRightLabelPress}>
-                    <Text style={rightLabelStyle}>
-                      {rightLabelTranslationKey
-                        ? t(rightLabelTranslationKey)
-                        : rightLabelValue}
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            )}
-            <TouchableOpacity
+    <Controller
+      control={control}
+      name={name}
+      render={({ field: { value, onChange }, fieldState: { error } }) => (
+        <View style={style}>
+          {(labelTranslationKey || labelValue || rightLabelTranslationKey || rightLabelValue) && (
+            <View style={styles.labelContainer}>
+              {(labelTranslationKey || labelValue) && (
+                <CommonText style={labelStyle}>
+                  {labelTranslationKey ? t(labelTranslationKey) : labelValue}
+                </CommonText>
+              )}
+              {(rightLabelTranslationKey || rightLabelValue) && (
+                <TouchableOpacity onPress={onRightLabelPress}>
+                  <Text style={rightLabelStyle}>
+                    {rightLabelTranslationKey
+                      ? t(rightLabelTranslationKey)
+                      : rightLabelValue}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+          <TouchableOpacity
+            style={[
+              styles.selectButton,
+              isDisabled && styles.selectButtonDisabled,
+              inputContainerStyle,
+            ]}
+            onPress={() => !isDisabled && setIsOpen(true)}
+            disabled={isDisabled}
+          >
+            <Text
               style={[
-                styles.selectButton,
-                style,
-                isDisabled && styles.selectButtonDisabled,
-                inputContainerStyle,
+                styles.selectText,
+                !value && styles.placeholderText,
+                isDisabled && styles.disabledText,
               ]}
-              onPress={() => !isDisabled && setIsOpen(true)}
-              disabled={isDisabled}
             >
-              <Text
-                style={[
-                  styles.selectText,
-                  !value && styles.placeholderText,
-                  isDisabled && styles.disabledText,
-                ]}
-              >
-                {value
-                  ? options.find(opt => opt.value === value)?.label
-                  : placeholder}
-              </Text>
-              {rightIcon ? (
-                <Image source={rightIcon} style={rightIconStyle} />
-              ) : null}
-            </TouchableOpacity>
-            {error && <Text>{error.message}</Text>}
-            <CommonModal
-              visible={isOpen}
-              setModalVisible={setIsOpen}
-              title={labelTranslationKey}
-              options={options.map(opt => ({
-                name: opt.label,
-                value: opt.value,
-                onPress: () => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                },
-              }))}
-            />
-          </View>
-        )}
-      />
-    </>
+              {value
+                ? options.find(opt => opt.value === value)?.label
+                : placeholder}
+            </Text>
+            {rightIcon ? (
+              <Image source={rightIcon} style={rightIconStyle} />
+            ) : (
+              <Text style={[styles.arrow, isDisabled && styles.disabledText]}>▼</Text>
+            )}
+          </TouchableOpacity>
+          {error && <Text style={styles.errorText}>{error.message}</Text>}
+          <CommonModal
+            visible={isOpen}
+            setModalVisible={setIsOpen}
+            title={labelTranslationKey ? t(labelTranslationKey) : labelValue}
+            options={options.map(opt => ({
+              name: opt.label,
+              value: opt.value,
+              selected: opt.value === value,
+              containerStyle: opt.value === value ? styles.selectedOption : undefined,
+              textStyle: opt.value === value ? styles.selectedOptionText : undefined,
+              onPress: () => {
+                onChange(opt.value);
+                if (onValueChange) {
+                  onValueChange(opt.value);
+                }
+                setIsOpen(false);
+              },
+            }))}
+          />
+        </View>
+      )}
+    />
   );
 };
 
 const styles = StyleSheet.create({
+  labelContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   selectButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
     backgroundColor: '#fff',
+    minHeight: 48,
   },
   selectButtonDisabled: {
-    backgroundColor: '#f5f5f5',
-    borderColor: '#e0e0e0',
+    backgroundColor: '#f3f4f6',
+    borderColor: '#e5e7eb',
   },
   selectText: {
     fontSize: 16,
-    color: '#333',
+    color: '#111827',
     flex: 1,
   },
   placeholderText: {
-    color: '#999',
+    color: '#9ca3af',
   },
   disabledText: {
-    color: '#bbb',
+    color: '#d1d5db',
   },
   arrow: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 10,
+    color: '#6b7280',
     marginLeft: 8,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  errorText: {
+    fontSize: 12,
+    color: '#ef4444',
+    marginTop: 6,
+    marginLeft: 4,
   },
-  modalContent: {
-    width: '80%',
-    maxHeight: '60%',
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    overflow: 'hidden',
+  selectedOption: {
+    backgroundColor: '#dbeafe',
   },
-  optionsList: {
-    maxHeight: 400,
-  },
-  optionItem: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  optionItemSelected: {
-    backgroundColor: '#E3F2FD',
-  },
-  optionText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  optionTextSelected: {
-    color: '#2196F3',
+  selectedOptionText: {
+    color: '#1e40af',
     fontWeight: '600',
   },
 });

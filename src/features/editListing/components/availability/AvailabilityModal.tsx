@@ -1,10 +1,10 @@
 import { EditListingForm, AvailabilityPlan } from "@features/editListing/types/editListingForm.type";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, FormProvider, useForm } from "react-hook-form";
 import { Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TimeZoneSelector } from "./TimeZoneSelector";
 import { DayScheduleEntry } from "./DayScheduleEntry";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 
 /**
  * Modal for editing availability schedule
@@ -16,6 +16,10 @@ interface AvailabilityModalProps {
   weekdays: readonly { key: string; label: string }[];
 }
 
+type LocalFormData = {
+  localPlan: AvailabilityPlan;
+};
+
 export const AvailabilityModal: React.FC<AvailabilityModalProps> = ({
   visible,
   onClose,
@@ -24,49 +28,57 @@ export const AvailabilityModal: React.FC<AvailabilityModalProps> = ({
 }) => {
   const { setValue, getValues } = useFormContext<EditListingForm>();
   
-  // Local state to hold changes until save
-  const [localPlan, setLocalPlan] = useState<AvailabilityPlan | null>(null);
+  // Get default timezone - use provided timezone or fallback to user's timezone
+  const getDefaultTimezone = () => {
+    if (timezone) return timezone;
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  };
+  
+  // Create a local form for the modal
+  const localFormMethods = useForm<LocalFormData>({
+    defaultValues: {
+      localPlan: {
+        type: 'availability-plan/time',
+        timezone: getDefaultTimezone(),
+        entries: [],
+        exceptions: [],
+      }
+    }
+  });
 
-  // Initialize local state when modal opens
+  // Initialize local form when modal opens
   useEffect(() => {
     if (visible) {
       const currentPlan = getValues('availabilityPlan');
-      // If no plan exists, create a default one for local editing
-      setLocalPlan(currentPlan || {
-        type: 'availability-plan/time',
-        timezone,
-        entries: [],
-        exceptions: [],
+      const defaultTimezone = getDefaultTimezone();
+      
+      // If there's an existing plan, use it; otherwise create new with default timezone
+      const planToUse = currentPlan && currentPlan.timezone 
+        ? currentPlan 
+        : {
+            type: 'availability-plan/time' as const,
+            timezone: defaultTimezone,
+            entries: currentPlan?.entries || [],
+            exceptions: currentPlan?.exceptions || [],
+          };
+      
+      localFormMethods.reset({
+        localPlan: planToUse
       });
     }
-  }, [visible, timezone, getValues]);
-
-  const handleTimezoneChange = (newTimezone: string) => {
-    if (localPlan) {
-      setLocalPlan({
-        ...localPlan,
-        timezone: newTimezone,
-      });
-    }
-  };
+  }, [visible, timezone, getValues, localFormMethods]);
 
   const handleSaveSchedule = () => {
-    // Save local changes to form context
-    if (localPlan) {
-      setValue('availabilityPlan', localPlan);
-    }
+    // Save local changes to parent form context
+    const localPlan = localFormMethods.getValues('localPlan');
+    setValue('availabilityPlan', localPlan);
     onClose();
   };
 
   const handleCancel = () => {
     // Discard changes by not saving
-    setLocalPlan(null);
     onClose();
   };
-
-  if (!localPlan) {
-    return null;
-  }
 
   return (
     <Modal
@@ -75,43 +87,40 @@ export const AvailabilityModal: React.FC<AvailabilityModalProps> = ({
       presentationStyle={Platform.OS === 'ios' ? 'pageSheet' : 'fullScreen'}
       onRequestClose={handleCancel}
     >
-      <SafeAreaView style={styles.modalSafeArea} edges={['top']}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Edit default schedule</Text>
-          <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>✕</Text>
-          </TouchableOpacity>
-        </View>
+      <FormProvider {...localFormMethods}>
+        <SafeAreaView style={styles.modalSafeArea} edges={['top']}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Edit default schedule</Text>
+            <TouchableOpacity onPress={handleCancel} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
 
-        <ScrollView 
-          style={styles.modalContent} 
-          contentContainerStyle={styles.modalContentContainer}
-          showsVerticalScrollIndicator={true}
-        >
-          <TimeZoneSelector
-            value={localPlan.timezone}
-            onChange={handleTimezoneChange}
-          />
+          <ScrollView 
+            style={styles.modalContent} 
+            contentContainerStyle={styles.modalContentContainer}
+            showsVerticalScrollIndicator={true}
+          >
+            <TimeZoneSelector />
 
-          <Text style={styles.sectionHeading}>Weekly default schedule</Text>
+            <Text style={styles.sectionHeading}>Weekly default schedule</Text>
 
-          {weekdays.map(({ key, label }) => (
-            <DayScheduleEntry
-              key={key}
-              dayOfWeek={key}
-              dayLabel={label}
-              localPlan={localPlan}
-              setLocalPlan={setLocalPlan}
-            />
-          ))}
-        </ScrollView>
+            {weekdays.map(({ key, label }) => (
+              <DayScheduleEntry
+                key={key}
+                dayOfWeek={key}
+                dayLabel={label}
+              />
+            ))}
+          </ScrollView>
 
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSaveSchedule}>
-            <Text style={styles.saveButtonText}>Save schedule</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+          <View style={styles.footer}>
+            <TouchableOpacity style={styles.saveButton} onPress={handleSaveSchedule}>
+              <Text style={styles.saveButtonText}>Save schedule</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </FormProvider>
     </Modal>
   );
 };
@@ -126,15 +135,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#e5e7eb',
     backgroundColor: '#fff',
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: '700',
+    color: '#111827',
   },
   closeButton: {
     padding: 8,
@@ -143,41 +152,52 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: 24,
-    fontWeight: '400',
-    color: '#666',
+    fontWeight: '300',
+    color: '#6b7280',
   },
   modalContent: {
     flex: 1,
   },
   modalContentContainer: {
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
+    paddingTop: 24,
+    paddingBottom: 24,
   },
   sectionHeading: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginTop: 24,
-    marginBottom: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginTop: 32,
+    marginBottom: 20,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   footer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderTopColor: '#e5e7eb',
     backgroundColor: '#fff',
   },
   saveButton: {
-    paddingVertical: 14,
+    paddingVertical: 16,
     paddingHorizontal: 24,
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
+    backgroundColor: '#10b981',
+    borderRadius: 12,
     alignItems: 'center',
+    shadowColor: '#10b981',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   saveButtonText: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
 });

@@ -6,4 +6,4 @@ export * from './Button/Button';
 export * from './RadioList';
 export * from './LocationModal';
 export * from './SessionLengthPicker/SessionLengthPicker';
-export * from './CommonSelect/CommonSelect';
+export * from './ModalSelect/ModalSelect';

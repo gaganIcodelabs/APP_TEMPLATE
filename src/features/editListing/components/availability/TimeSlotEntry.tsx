@@ -1,29 +1,36 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
-import { AvailabilityPlan, AvailabilityPlanEntry } from '../../types/editListingForm.type';
-import { CommonSelect } from '@components/index';
+import { useFormContext, useWatch } from 'react-hook-form';
+import { AvailabilityPlan, AvailabilityPlanEntry, EditListingForm } from '../../types/editListingForm.type';
+import { ModalSelect } from '@components/index';
 import { generateTimeOptions, getTimeOptionsAfter } from '../../utils/timeUtils';
 
 const TIME_OPTIONS = generateTimeOptions(true);
 
 interface TimeSlotEntryProps {
-  dayOfWeek: string;
   entryIndex: number;
-  entry: AvailabilityPlanEntry;
-  localPlan: AvailabilityPlan;
-  setLocalPlan: (plan: AvailabilityPlan) => void;
 }
 
 export const TimeSlotEntry: React.FC<TimeSlotEntryProps> = ({ 
-  entryIndex, 
-  entry,
-  localPlan,
-  setLocalPlan,
+  entryIndex,
 }) => {
-  const entries = localPlan.entries || [];
+  const { control, setValue, getValues } = useFormContext<{ localPlan: AvailabilityPlan }>();
+
+
+  const entry = useWatch({
+      control,
+      name: 'localPlan',
+      compute: (data: EditListingForm['availabilityPlan'])=>{
+        return data?.entries[entryIndex];
+      }
+    }) as AvailabilityPlanEntry;
+
+  if (!entry) return null;
 
   const handleUpdateEntry = (field: keyof AvailabilityPlanEntry, value: string | number) => {
-    const newEntries = [...entries];
+    const localPlan = getValues('localPlan');
+
+    const newEntries = [...localPlan.entries];
     newEntries[entryIndex] = {
       ...newEntries[entryIndex],
       [field]: value,
@@ -37,15 +44,16 @@ export const TimeSlotEntry: React.FC<TimeSlotEntryProps> = ({
       }
     }
     
-    setLocalPlan({
+    setValue('localPlan', {
       ...localPlan,
       entries: newEntries,
     });
   };
 
   const handleDelete = () => {
-    const newEntries = entries.filter((_, index) => index !== entryIndex);
-    setLocalPlan({
+    const localPlan = getValues('localPlan');
+    const newEntries = localPlan.entries.filter((_, index) => index !== entryIndex);
+    setValue('localPlan', {
       ...localPlan,
       entries: newEntries,
     });
@@ -58,22 +66,29 @@ export const TimeSlotEntry: React.FC<TimeSlotEntryProps> = ({
     <View style={styles.container}>
       <View style={styles.timeRow}>
         <View style={styles.selectWrapper}>
-          <CommonSelect
-            value={entry.startTime}
-            onChange={(value: string) => handleUpdateEntry('startTime', value)}
+          <ModalSelect
+            control={control}
+            name={`localPlan.entries.${entryIndex}.startTime`}
             options={TIME_OPTIONS.slice(0, -1)}
             placeholder="Start"
+            onValueChange={(value) => {
+              // Clear end time if it becomes invalid
+              const currentEndTime = entry.endTime;
+              if (currentEndTime && currentEndTime <= value) {
+                setValue(`localPlan.entries.${entryIndex}.endTime`, '');
+              }
+            }}
           />
         </View>
 
         <Text style={styles.dash}>–</Text>
 
         <View style={styles.selectWrapper}>
-          <CommonSelect
-            value={entry.endTime}
-            onChange={(value: string) => handleUpdateEntry('endTime', value)}
+          <ModalSelect
+            control={control}
+            name={`localPlan.entries.${entryIndex}.endTime`}
             options={endTimeOptions}
-            placeholder="End" 
+            placeholder="End"
           />
         </View>
       </View>
@@ -107,58 +122,64 @@ export const TimeSlotEntry: React.FC<TimeSlotEntryProps> = ({
 const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
-    padding: 12,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 8,
+    padding: 16,
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   timeRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
   selectWrapper: {
     flex: 1,
   },
   dash: {
-    marginHorizontal: 8,
-    fontSize: 16,
-    color: '#666',
+    marginHorizontal: 12,
+    fontSize: 18,
+    color: '#6b7280',
+    marginTop: 14,
   },
   nextDayLabel: {
     fontSize: 12,
-    color: '#666',
-    marginBottom: 8,
+    color: '#6b7280',
+    marginBottom: 12,
     fontStyle: 'italic',
+    paddingLeft: 4,
   },
   seatsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   seatsLabel: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
-    color: '#333',
+    color: '#374151',
     marginRight: 12,
     width: 60,
   },
   seatsInput: {
     flex: 1,
-    height: 40,
+    height: 48,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
-    paddingHorizontal: 12,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 16,
     backgroundColor: '#fff',
     fontSize: 16,
+    color: '#111827',
   },
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 8,
+    paddingHorizontal: 4,
   },
   deleteText: {
-    color: '#f44336',
+    color: '#ef4444',
     fontSize: 14,
     fontWeight: '500',
   },
