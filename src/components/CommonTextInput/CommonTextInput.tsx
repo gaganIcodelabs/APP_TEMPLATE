@@ -3,6 +3,7 @@ import {
   Image,
   ImageSourcePropType,
   ImageStyle,
+  StyleProp,
   StyleSheet,
   Text,
   TextInput,
@@ -22,7 +23,7 @@ interface TextInputFieldProps extends TextInputProps {
   labelKey?: string;
   labelValue?: string;
   isPassword?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   rightIcon?: ImageSourcePropType;
   rightIconStyle?: ImageStyle;
   onRightLabelPress?: () => void;
