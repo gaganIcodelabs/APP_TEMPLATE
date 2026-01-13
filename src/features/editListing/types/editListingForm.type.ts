@@ -32,6 +32,7 @@ export type ImageItem = {
 type EditListingStaticForm = {
   type: string | undefined;
   title: string;
+  description?: string;
   location: {
     origin: [number, number]; // [latitude, longitude]
     address: string;
@@ -62,3 +63,26 @@ type EditListingDynamicForm = {
 };
 
 export type EditListingForm = EditListingStaticForm & EditListingDynamicForm;
+
+// Type for the rest of the form data (excluding known fields)
+export type EditListingFormRest = Omit<
+  EditListingForm,
+  | 'type'
+  | 'title'
+  | 'description'
+  | 'location'
+  | 'images'
+  | 'price'
+  | 'stock'
+  | 'stockTypeInfinity'
+  | 'priceVariants'
+  | 'bookingLengthInMinutes'
+  | 'startTimeInterval'
+  | 'availabilityPlan'
+  | 'availabilityExceptions'
+  | 'deliveryOptions'
+  | 'pickupLocation'
+  | 'shippingPriceOneItem'
+  | 'shippingPriceAdditionalItems'
+  | 'fields'
+>;
