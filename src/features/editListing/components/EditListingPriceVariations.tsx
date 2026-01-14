@@ -1,6 +1,16 @@
-import { Button, CommonTextInput, RadioList, SessionLengthPicker } from '@components/index';
+import {
+  Button,
+  CommonTextInput,
+  RadioList,
+  SessionLengthPicker,
+} from '@components/index';
 import { useConfiguration } from '@context/configurationContext';
-import { Controller, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import {
+  Controller,
+  useFieldArray,
+  useFormContext,
+  useWatch,
+} from 'react-hook-form';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useEditListingWizardRoute } from '../editListing.helper';
 import { useIsCompatibleCurrency } from '../hooks/useIsCompatibleCurrency';
@@ -28,7 +38,7 @@ const EditListingPriceVariations = () => {
 
   const listingType = useWatch<EditListingForm>({
     control,
-    name: 'type',
+    name: 'listingType',
   });
 
   if (!isPriceVariationsEnabled || !isCompatibleCurrency) return null;
@@ -39,7 +49,6 @@ const EditListingPriceVariations = () => {
 
   const unitType = listingTypeConfig?.transactionType?.unitType || 'day';
   const isFixedUnitType = unitType === FIXED;
-  
 
   const handleAddVariation = () => {
     const newVariation = isFixedUnitType
@@ -69,9 +78,7 @@ const EditListingPriceVariations = () => {
       {fields.map((field, index) => (
         <View key={field.id} style={styles.variationContainer}>
           <View style={styles.variationHeader}>
-            <Text style={styles.variationTitle}>
-              Variation {index + 1}
-            </Text>
+            <Text style={styles.variationTitle}>Variation {index + 1}</Text>
             {fields.length > 1 && (
               <TouchableOpacity
                 onPress={() => handleRemoveVariation(index)}
@@ -95,7 +102,8 @@ const EditListingPriceVariations = () => {
           <View style={styles.fieldContainer}>
             <CommonTextInput
               control={control}
-              name={`priceVariants.${index}.price`}
+              name={`priceVariants.${index}.priceInSubunits`}
+              // name={`priceVariants.${index}.price`}
               labelValue={`Price per ${isFixedUnitType ? 'session' : unitType}`}
               labelStyle={styles.label}
               placeholder={`Add a price...`}
@@ -110,7 +118,10 @@ const EditListingPriceVariations = () => {
                 control={control}
                 name={`priceVariants.${index}.bookingLengthInMinutes`}
                 defaultValue={60}
-                render={({ field: { value, onChange }, fieldState: { error } }) => (
+                render={({
+                  field: { value, onChange },
+                  fieldState: { error },
+                }) => (
                   <SessionLengthPicker
                     value={value}
                     onChange={onChange}
@@ -150,8 +161,7 @@ const EditListingPriceVariations = () => {
             />
           )}
         />
-      )}      
-
+      )}
     </View>
   );
 };

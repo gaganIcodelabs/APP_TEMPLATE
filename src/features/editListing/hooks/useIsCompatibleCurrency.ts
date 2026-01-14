@@ -9,7 +9,10 @@ import { EditListingForm } from '../types/editListingForm.type';
 export const useIsCompatibleCurrency = (listingId: string | undefined) => {
   const config = useConfiguration();
   const { control } = useFormContext<EditListingForm>();
-  const listingType = useWatch<EditListingForm>({ control, name: 'type' });
+  const listingType = useWatch<EditListingForm>({
+    control,
+    name: 'listingType',
+  });
 
   const transactionProcessAlias = useMemo(() => {
     return config?.listing?.listingTypes?.find(

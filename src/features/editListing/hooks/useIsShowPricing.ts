@@ -7,7 +7,7 @@ export const useIsShowPricing = () => {
   const { control } = useFormContext<EditListingForm>();
   const listingType = useWatch<EditListingForm>({
     control,
-    name: 'type',
+    name: 'listingType',
   });
 
   if (!listingType) return false;
@@ -19,4 +19,3 @@ export const useIsShowPricing = () => {
   // Show pricing if listing type has pricing enabled
   return listingTypeConfig?.defaultListingFields?.price !== false;
 };
-

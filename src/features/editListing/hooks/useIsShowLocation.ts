@@ -7,7 +7,7 @@ export const useIsShowLocation = () => {
   const { control } = useFormContext<EditListingForm>();
   const listingType = useWatch<EditListingForm>({
     control,
-    name: 'type',
+    name: 'listingType',
   });
   return (
     listingType &&

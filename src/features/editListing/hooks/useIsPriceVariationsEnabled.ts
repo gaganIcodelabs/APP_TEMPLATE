@@ -7,7 +7,7 @@ export const useIsPriceVariationsEnabled = () => {
   const { control } = useFormContext<EditListingForm>();
   const listingType = useWatch<EditListingForm>({
     control,
-    name: 'type',
+    name: 'listingType',
   });
 
   if (!listingType) return false;

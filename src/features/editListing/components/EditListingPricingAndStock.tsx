@@ -11,7 +11,6 @@ import { EditListingForm } from '../types/editListingForm.type';
 // Stock type constants (matching web-template)
 const STOCK_MULTIPLE_ITEMS = 'multipleItems';
 
-
 const EditListingPricingAndStock = () => {
   const listingId = useEditListingWizardRoute().params.listingId;
   const { control } = useFormContext<EditListingForm>();
@@ -22,7 +21,7 @@ const EditListingPricingAndStock = () => {
 
   const listingType = useWatch<EditListingForm>({
     control,
-    name: 'type',
+    name: 'listingType',
   });
 
   // Only show if both pricing and stock should be shown
@@ -50,9 +49,7 @@ const EditListingPricingAndStock = () => {
           placeholder={`Add a price...`}
           keyboardType="numeric"
         />
-        <Text style={styles.helperText}>
-          Enter the price in {currency}. 
-        </Text>
+        <Text style={styles.helperText}>Enter the price in {currency}.</Text>
       </View>
 
       {/* Stock Field - for finite stock (multipleItems) */}
@@ -68,7 +65,6 @@ const EditListingPricingAndStock = () => {
           />
         </View>
       )}
-
     </View>
   );
 };

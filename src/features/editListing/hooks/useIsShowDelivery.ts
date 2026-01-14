@@ -7,7 +7,7 @@ export const useIsShowDelivery = () => {
   const { control } = useFormContext<EditListingForm>();
   const listingType = useWatch<EditListingForm>({
     control,
-    name: 'type',
+    name: 'listingType',
   });
 
   const listingTypeConfig = config?.listing?.listingTypes?.find(
@@ -15,12 +15,10 @@ export const useIsShowDelivery = () => {
   );
 
   const showPickup =
-    listingType &&
-    listingTypeConfig?.defaultListingFields?.pickup !== false;
+    listingType && listingTypeConfig?.defaultListingFields?.pickup !== false;
 
   const showShipping =
-    listingType &&
-    listingTypeConfig?.defaultListingFields?.shipping !== false;
+    listingType && listingTypeConfig?.defaultListingFields?.shipping !== false;
 
   return {
     showPickup,

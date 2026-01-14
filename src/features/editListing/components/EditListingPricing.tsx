@@ -1,4 +1,8 @@
-import { CommonTextInput, RadioList, SessionLengthPicker } from '@components/index';
+import {
+  CommonTextInput,
+  RadioList,
+  SessionLengthPicker,
+} from '@components/index';
 import { useConfiguration } from '@context/configurationContext';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { StyleSheet, Text, View } from 'react-native';
@@ -25,7 +29,7 @@ const EditListingPricing = () => {
 
   const listingType = useWatch<EditListingForm>({
     control,
-    name: 'type',
+    name: 'listingType',
   });
 
   // Don't show simple pricing if:

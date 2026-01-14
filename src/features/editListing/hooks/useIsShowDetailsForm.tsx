@@ -9,7 +9,7 @@ export const useIsShowDetailsForm = () => {
 
   const listingType = useWatch<EditListingForm>({
     control,
-    name: 'type',
+    name: 'listingType',
   });
 
   const hasCategories =
@@ -50,7 +50,10 @@ export const useIsShowDetailsForm = () => {
           return false;
         }
       }
-      return !!deepestSelectedLevelSubcategories && deepestSelectedLevelSubcategories?.length > 0;
+      return (
+        !!deepestSelectedLevelSubcategories &&
+        deepestSelectedLevelSubcategories?.length > 0
+      );
     },
   });
 

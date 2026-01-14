@@ -11,7 +11,7 @@ export const useIsShowAvailability = () => {
   const { control } = useFormContext<EditListingForm>();
   const listingType = useWatch<EditListingForm>({
     control,
-    name: 'type',
+    name: 'listingType',
   });
 
   if (!listingType) return false;
@@ -21,7 +21,8 @@ export const useIsShowAvailability = () => {
   );
 
   // Check if availability is in defaultListingFields
-  const hasAvailabilityField = listingTypeConfig?.defaultListingFields?.availability === true;
+  const hasAvailabilityField =
+    listingTypeConfig?.defaultListingFields?.availability === true;
 
   return hasAvailabilityField;
 };

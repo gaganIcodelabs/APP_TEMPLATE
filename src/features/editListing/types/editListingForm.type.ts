@@ -1,6 +1,7 @@
 export type PriceVariant = {
   name?: string;
-  price?: number; // Price in minor units (cents)
+  // price?: number; // Price in minor units (cents)
+  priceInSubunits?: number; // Price in minor units (cents)
   bookingLengthInMinutes?: number; // For FIXED unit type bookings
 };
 
@@ -30,7 +31,7 @@ export type ImageItem = {
 };
 
 type EditListingStaticForm = {
-  type: string | undefined;
+  listingType: string | undefined;
   title: string;
   description?: string;
   location: {
@@ -67,7 +68,7 @@ export type EditListingForm = EditListingStaticForm & EditListingDynamicForm;
 // Type for the rest of the form data (excluding known fields)
 export type EditListingFormRest = Omit<
   EditListingForm,
-  | 'type'
+  | 'listingType'
   | 'title'
   | 'description'
   | 'location'
@@ -84,5 +85,7 @@ export type EditListingFormRest = Omit<
   | 'pickupLocation'
   | 'shippingPriceOneItem'
   | 'shippingPriceAdditionalItems'
+  | 'transactionProcessAlias'
+  | 'unitType'
   | 'fields'
 >;

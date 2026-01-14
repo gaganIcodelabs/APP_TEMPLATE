@@ -1,9 +1,9 @@
 import { CategoryNode } from '@appTypes/config/config';
-import { RadioList } from '@components/index';
+import { CommonText, RadioList } from '@components/index';
 import { useConfiguration } from '@context/configurationContext';
 import { useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useEditListingWizardRoute } from '../editListing.helper';
 import { useIsCompatibleCurrency } from '../hooks/useIsCompatibleCurrency';
 import { EditListingForm } from '../types/editListingForm.type';
@@ -60,7 +60,7 @@ const SelectListingCategory = () => {
   const config = useConfiguration();
   const listingType = useWatch<EditListingForm>({
     control,
-    name: 'type',
+    name: 'listingType',
   });
   const isCompatibleCurrency = useIsCompatibleCurrency(listingId);
   const prefix = config?.categoryConfiguration?.key;
@@ -76,7 +76,7 @@ const SelectListingCategory = () => {
 
   return (
     <View>
-      <Text>Select Listing Category</Text>
+      <CommonText style={styles.label}>Select Listing Category</CommonText>
       <CategoryField
         level={1}
         currentCategoryOptions={listingCategories}
@@ -85,5 +85,11 @@ const SelectListingCategory = () => {
     </View>
   );
 };
-
+const styles = StyleSheet.create({
+  label: {
+    fontSize: 16,
+    color: 'black',
+    marginBottom: 12,
+  },
+});
 export default SelectListingCategory;
