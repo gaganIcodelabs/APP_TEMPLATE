@@ -8,7 +8,10 @@ import {
 } from '@constants/schemaTypes';
 import { AppConfig } from '@redux/slices/hostedAssets.slice';
 import { YOUTUBE_URL_REGEX } from '@util/string';
-import { getPropsForCustomUserFieldInputs } from '@util/userHelpers';
+import {
+  addScopePrefix,
+  getPropsForCustomUserFieldInputs,
+} from '@util/userHelpers';
 import { TFunction } from 'i18next';
 import { z } from 'zod';
 
@@ -147,3 +150,23 @@ export const getSoleUserTypeMaybe = (
   Array.isArray(userTypes) && userTypes.length === 1
     ? userTypes[0].userType
     : null;
+
+export const getNonUserFieldParams = (
+  values: any,
+  userFieldConfigs: UserFieldConfigItem[],
+) => {
+  const userFieldKeys = userFieldConfigs.map(({ scope, key }) =>
+    addScopePrefix(scope, key),
+  );
+
+  return Object.entries(values).reduce((picked, [key, value]) => {
+    const isUserFieldKey = userFieldKeys.includes(key);
+
+    return isUserFieldKey
+      ? picked
+      : {
+          ...picked,
+          [key]: value,
+        };
+  }, {});
+};
