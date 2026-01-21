@@ -1,1 +1,11 @@
-{}
+{
+  "Authentication": {
+    "dontHaveAnAccount": "Don't have an account?",
+    "haveAnAccount": "Have an account?",
+    "signup": "Sign up",
+    "login": "Log in",
+    "loginFailed": "The email and password you provided don't match our records. Please double-check and try again.",
+    "signupFailed": "Signup failed. Please make sure all the information you entered is correct and try again.",
+    "signupFailedEmailAlreadyTaken": "An account with this email address already exists. Try logging in instead."
+  }
+}

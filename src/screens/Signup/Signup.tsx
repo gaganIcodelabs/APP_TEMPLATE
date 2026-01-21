@@ -11,11 +11,14 @@ import {
   useRoute,
 } from '@react-navigation/native';
 import {
+  selectCreateUserError,
   signupInProgress,
   signupWithEmailPassword,
 } from '@redux/slices/auth.slice';
 import { useAppDispatch, useTypedSelector } from '@redux/store';
-import { getNonUserFieldParams, pickUserFieldsData } from '@util/userHelpers';
+import { isSignupEmailTakenError } from '@util/errors';
+import { pickUserFieldsData } from '@util/userHelpers';
+import { isEqual } from 'lodash';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -31,7 +34,7 @@ import { SignupPasswordInputField } from './components/SignupPasswordInputField'
 import { SignupPhoneNumberInputField } from './components/SignupPhoneNumberInputField';
 import { TermsAndPolicy } from './components/TermsAndPolicy';
 import { UserTypeField } from './components/UserTypeField';
-import { getSignUpSchema, getSoleUserTypeMaybe } from './signup.helper';
+import { getNonUserFieldParams, getSignUpSchema, getSoleUserTypeMaybe } from './signup.helper';
 import { SignupFormValues } from './Signup.types';
 
 type SignupRouteProp = RouteProp<AuthStackParamList, 'Signup'>;
@@ -44,6 +47,7 @@ export const Signup: React.FC = () => {
 
   const navigation = useNavigation<SignupNavigationProp>();
   const signupInProcess = useTypedSelector(signupInProgress);
+  const signupError = useTypedSelector(selectCreateUserError, isEqual);
   const config = useConfiguration();
   const { t } = useTranslation();
   const userTypes = useMemo(() => config?.user.userTypes || [], [config]);
@@ -158,6 +162,14 @@ export const Signup: React.FC = () => {
           <>
             <SignupEmailInputField control={control} />
             <SignupPasswordInputField control={control} />
+
+            {signupError && (
+              <CommonText style={styles.errorText}>
+                {isSignupEmailTakenError(signupError)
+                  ? t('Authentication.signupFailedEmailAlreadyTaken')
+                  : t('Authentication.signupFailed')}
+              </CommonText>
+            )}
             <SignupFirstNameInputField control={control} />
             <SignupLastNameInputField control={control} />
             {showDisplayName && (
@@ -233,5 +245,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textDecorationLine: 'underline',
     // ...primaryFont('600'),
+  },
+  errorText: {
+    color: colors.errorRed,
+    fontSize: 14,
+    marginTop: 8,
+    marginBottom: 8,
+    textAlign: 'center',
   },
 });

@@ -1,7 +1,11 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import React from 'react';
 import { useAppDispatch, useTypedSelector } from '@redux/store';
-import { login, loginInProgress } from '@redux/slices/auth.slice';
+import {
+  login,
+  loginInProgress,
+  selectLoginError,
+} from '@redux/slices/auth.slice';
 import { Button, CommonText } from '@components/index';
 import { useTranslation } from 'react-i18next';
 import { colors } from '@constants/colors';
@@ -21,6 +25,7 @@ export const Login: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigation = useNavigation<LoginNavigationProp>();
   const loginInProcess = useTypedSelector(loginInProgress);
+  const loginError = useTypedSelector(state => !!selectLoginError(state));
   const { t } = useTranslation();
 
   const onSubmit = async (values: LoginFormValues) => {
@@ -53,6 +58,12 @@ export const Login: React.FC = () => {
 
       <LoginEmailInputField control={control} />
       <LoginPasswordInputField control={control} />
+
+      {loginError && (
+        <CommonText style={styles.errorText}>
+          {t('Authentication.loginFailed')}
+        </CommonText>
+      )}
 
       <Button
         title="Login"
@@ -104,5 +115,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textDecorationLine: 'underline',
     // ...primaryFont('600'),
+  },
+  errorText: {
+    color: colors.errorRed,
+    fontSize: 14,
+    marginTop: 8,
+    marginBottom: 8,
+    textAlign: 'center',
   },
 });

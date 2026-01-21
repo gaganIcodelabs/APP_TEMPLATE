@@ -272,7 +272,6 @@ export const fetchAuthenticationState = createAsyncThunk<AuthInfo, void, Thunk>(
               }
             }
           } else if (fetchCurrentUser.rejected.match(userResult)) {
-            console.log('else case');
             // Handle user fetch errors (4xx vs 5xx)
             const error = userResult.payload as any;
             const status = error?.status;
@@ -471,3 +470,6 @@ export const signupInProgress = (state: RootState) =>
 export const loginInProgress = (state: RootState) => state.auth.loginInProgress;
 export const loginOutInProgress = (state: RootState) =>
   state.auth.logoutInProgress;
+export const selectLoginError = (state: RootState) => state.auth.loginError;
+export const selectCreateUserError = (state: RootState) =>
+  state.auth.createUserError;
