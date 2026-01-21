@@ -4,20 +4,25 @@ import { AppStackParamList } from '@appTypes/index';
 import navigationConfig from './navigationConfig';
 import Home from '@screens/Home/Home';
 import { EditListingNavigator } from '@features/editListing/EditListingNavigator';
+import { useTypedSelector } from '@redux/store';
+import { canCurrentUserPostListingsSelector } from '@redux/slices/user.slice';
 
 const { Screen, Navigator } = createNativeStackNavigator<AppStackParamList>();
 
 const AppNavigator = () => {
+  const canPostListings = useTypedSelector(canCurrentUserPostListingsSelector);
   return (
     <Navigator
       screenOptions={navigationConfig}
-      initialRouteName={SCREENS.EDIT_LISTING_WIZARD}
+      initialRouteName={SCREENS.HOME}
     >
       <Screen name={SCREENS.HOME} component={Home} />
-      <Screen
-        name={SCREENS.EDIT_LISTING_WIZARD}
-        component={EditListingNavigator}
-      />
+      {canPostListings ? (
+        <Screen
+          name={SCREENS.EDIT_LISTING_WIZARD}
+          component={EditListingNavigator}
+        />
+      ) : null}
     </Navigator>
   );
 };

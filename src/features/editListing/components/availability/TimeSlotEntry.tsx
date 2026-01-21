@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-nativ
 import { useFormContext, useWatch } from 'react-hook-form';
 import { AvailabilityPlan, AvailabilityPlanEntry, EditListingForm } from '../../types/editListingForm.type';
 import { ModalSelect } from '@components/index';
-import { generateTimeOptions, getTimeOptionsAfter } from '../../utils/timeUtils';
+import { generateTimeOptions } from '@util/timeUtils';
+import { getTimeOptionsAfter } from '@util/timeUtils';
 
 const TIME_OPTIONS = generateTimeOptions(true);
 

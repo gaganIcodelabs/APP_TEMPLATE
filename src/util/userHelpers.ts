@@ -4,6 +4,8 @@ import {
   CustomUserFieldInputProps,
   UserFieldConfigItem,
 } from '@appTypes/config';
+import { CurrentUser } from '@appTypes/index';
+import { AppConfig } from '@redux/slices/hostedAssets.slice';
 
 interface PickedFields {
   [key: string]: any; // This can be adjusted based on expected field types
@@ -58,7 +60,10 @@ export const pickUserFieldsData = (
   return userFieldConfigs.reduce(
     (fields: PickedFields, field: UserFieldConfigItem) => {
       const { key, userTypeConfig, scope = 'public', schemaType } = field || {};
-      const namespacedKey = addScopePrefix(scope, key);
+      const namespacedKey = addScopePrefix(
+        scope === 'metadata' ? 'meta' : scope,
+        key,
+      );
 
       const isKnownSchemaType = EXTENDED_DATA_SCHEMA_TYPES.includes(schemaType);
       const isTargetScope = scope === targetScope;
@@ -100,7 +105,10 @@ export const initialValuesForUserFields = (
 ) => {
   return userFieldConfigs.reduce((fields, field) => {
     const { key, userTypeConfig, scope = 'public', schemaType } = field || {};
-    const namespacedKey = addScopePrefix(scope, key);
+    const namespacedKey = addScopePrefix(
+      scope === 'metadata' ? 'meta' : scope,
+      key,
+    );
 
     const isKnownSchemaType = EXTENDED_DATA_SCHEMA_TYPES.includes(schemaType);
     const isTargetScope = scope === targetScope;
@@ -139,7 +147,10 @@ export const getPropsForCustomUserFieldInputs = (
         // console.log('pickedFields', pickedFields);
         const { key, userTypeConfig, schemaType, scope, saveConfig } =
           fieldConfig || {};
-        const namespacedKey = addScopePrefix(scope, key);
+        const namespacedKey = addScopePrefix(
+          scope === 'metadata' ? 'meta' : scope,
+          key,
+        );
         // const showField = isSignup ? saveConfig.displayInSignUp : true;
         const showField = isSignup ? saveConfig?.displayInSignUp ?? true : true;
 
@@ -167,167 +178,161 @@ export const getPropsForCustomUserFieldInputs = (
   );
 };
 
-// /**
-//  * Check if currentUser has permission to post listings.
-//  * Defined in currentUser's effectivePermissionSet relationship:
-//  * https://www.sharetribe.com/api-reference/marketplace.html#currentuser-permissionset
-//  *
-//  * @param {Object} currentUser API entity
-//  * @returns {Boolean} true if currentUser has permission to post listings.
-//  */
-// export const hasPermissionToPostListings = currentUser => {
-//   if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
-//     console.warn(
-//       '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.',
-//     );
-//   }
-//   return (
-//     currentUser?.effectivePermissionSet?.attributes?.postListings ===
-//     'permission/allow'
-//   );
-// };
-
-// /**
-//  * Check if currentUser has permission to initiate transactions.
-//  * Defined in currentUser's effectivePermissionSet relationship:
-//  * https://www.sharetribe.com/api-reference/marketplace.html#currentuser-permissionset
-//  *
-//  * @param {Object} currentUser API entity
-//  * @returns {Boolean} true if currentUser has permission to initiate transactions.
-//  */
-// export const hasPermissionToInitiateTransactions = currentUser => {
-//   if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
-//     console.warn(
-//       '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.',
-//     );
-//   }
-//   return (
-//     currentUser?.effectivePermissionSet?.attributes?.initiateTransactions ===
-//     'permission/allow'
-//   );
-// };
-
-// /**
-//  * Check if currentUser has permission to view listing and user data on a private marketplace.
-//  * Defined in currentUser's effectivePermissionSet relationship:
-//  * https://www.sharetribe.com/api-reference/marketplace.html#currentuser-permissionset
-//  *
-//  * @param {Object} currentUser API entity
-//  * @returns {Boolean} true if currentUser has permission to view listing and user data on a private marketplace.
-//  */
-// export const hasPermissionToViewData = currentUser => {
-//   if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
-//     console.warn(
-//       '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.',
-//     );
-//   }
-//   return (
-//     currentUser?.effectivePermissionSet?.attributes?.read === 'permission/allow'
-//   );
-// };
-
-// /**
-//  * Check if currentUser has been approved to gain access.
-//  * I.e. they are not in 'pending-approval' or 'banned' state.
-//  *
-//  * If the user is in 'pending-approval' state, they don't have right to post listings and initiate transactions.
-//  *
-//  * @param {Object} currentUser API entity.
-//  * @returns {Boolean} true if currentUser has been approved (state is 'active').
-//  */
-// export const isUserAuthorized = currentUser =>
-//   currentUser?.attributes?.state === 'active';
-
-// /**
-//  * Get the user type configuration for the current user's user type
-//  * @param {*} config marketplace configuration
-//  * @param {*} currentUser API entity
-//  * @returns a single user type configuration, if found
-//  */
-// const getCurrentUserTypeConfig = (config, currentUser) => {
-//   const { userTypes } = config.user;
-//   return userTypes.find(
-//     ut =>
-//       ut.userType === currentUser?.attributes?.profile?.publicData?.userType,
-//   );
-// };
-
-// /**
-//  * Check if the links for creating a new listing should be shown to the
-//  * user currently browsing the marketplace.
-//  * @param {Object} config Marketplace configuration
-//  * @param {Object} currentUser API entity
-//  * @returns {Boolean} true if the currentUser's user type, or the anonymous user configuration, is set to see the link
-//  */
-// export const showCreateListingLinkForUser = (config, currentUser) => {
-//   const { topbar } = config;
-//   const currentUserTypeConfig = getCurrentUserTypeConfig(config, currentUser);
-
-//   const { accountLinksVisibility } = currentUserTypeConfig || {};
-
-//   return currentUser && accountLinksVisibility
-//     ? accountLinksVisibility.postListings
-//     : currentUser
-//     ? true
-//     : topbar?.postListingsLink
-//     ? topbar.postListingsLink.showToUnauthenticatedUsers
-//     : true;
-// };
-
-// /**
-//  * Check if payout details tab and payout methods tab should be shown for the user
-//  * @param {Object} config Marketplace configuration
-//  * @param {*} currentUser API entity
-//  * @returns {Object} { showPayoutDetails: Boolean, showPaymentMethods: boolean }
-//  */
-// export const showPaymentDetailsForUser = (config, currentUser) => {
-//   const currentUserTypeConfig = getCurrentUserTypeConfig(config, currentUser);
-//   const { paymentMethods = true, payoutDetails = true } =
-//     currentUserTypeConfig?.accountLinksVisibility || {};
-
-//   return currentUser
-//     ? {
-//         showPayoutDetails: payoutDetails,
-//         showPaymentMethods: paymentMethods,
-//       }
-//     : {
-//         showPayoutDetails: false,
-//         showPaymentMethods: false,
-//       };
-// };
-
-// /**
-//  * Check the roles defined for the current user
-//  * @param {*} config Marketplace configuration
-//  * @param {*} currentUser API entity
-//  * @returns Object with attributes 'customer' and 'provider' and boolean values for each
-//  */
-// export const getCurrentUserTypeRoles = (config, currentUser) => {
-//   const currentUserTypeConfig = getCurrentUserTypeConfig(config, currentUser);
-//   return (
-//     currentUserTypeConfig?.roles || {
-//       customer: true,
-//       provider: true,
-//     }
-//   );
-// };
-
-export const getNonUserFieldParams = (
-  values: any,
-  userFieldConfigs: UserFieldConfigItem[],
-) => {
-  const userFieldKeys = userFieldConfigs.map(({ scope, key }) =>
-    addScopePrefix(scope, key),
+/**
+ * Check if currentUser has permission to post listings.
+ * Defined in currentUser's effectivePermissionSet relationship:
+ * https://www.sharetribe.com/api-reference/marketplace.html#currentuser-permissionset
+ *
+ * @param {Object} currentUser API entity
+ * @returns {Boolean} true if currentUser has permission to post listings.
+ */
+export const hasPermissionToPostListings = (currentUser: CurrentUser) => {
+  if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
+    console.warn(
+      '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.',
+    );
+  }
+  return (
+    currentUser?.effectivePermissionSet?.attributes?.postListings ===
+    'permission/allow'
   );
+};
 
-  return Object.entries(values).reduce((picked, [key, value]) => {
-    const isUserFieldKey = userFieldKeys.includes(key);
+/**
+ * Check if currentUser has permission to initiate transactions.
+ * Defined in currentUser's effectivePermissionSet relationship:
+ * https://www.sharetribe.com/api-reference/marketplace.html#currentuser-permissionset
+ *
+ * @param {Object} currentUser API entity
+ * @returns {Boolean} true if currentUser has permission to initiate transactions.
+ */
+export const hasPermissionToInitiateTransactions = (
+  currentUser: CurrentUser,
+) => {
+  if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
+    console.warn(
+      '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.',
+    );
+  }
+  return (
+    currentUser?.effectivePermissionSet?.attributes?.initiateTransactions ===
+    'permission/allow'
+  );
+};
 
-    return isUserFieldKey
-      ? picked
-      : {
-          ...picked,
-          [key]: value,
-        };
-  }, {});
+/**
+ * Check if currentUser has permission to view listing and user data on a private marketplace.
+ * Defined in currentUser's effectivePermissionSet relationship:
+ * https://www.sharetribe.com/api-reference/marketplace.html#currentuser-permissionset
+ *
+ * @param {Object} currentUser API entity
+ * @returns {Boolean} true if currentUser has permission to view listing and user data on a private marketplace.
+ */
+export const hasPermissionToViewData = (currentUser: CurrentUser) => {
+  if (currentUser?.id && !currentUser?.effectivePermissionSet?.id) {
+    console.warn(
+      '"effectivePermissionSet" relationship is not defined or included to the fetched currentUser entity.',
+    );
+  }
+  return (
+    currentUser?.effectivePermissionSet?.attributes?.read === 'permission/allow'
+  );
+};
+
+/**
+ * Check if currentUser has been approved to gain access.
+ * I.e. they are not in 'pending-approval' or 'banned' state.
+ *
+ * If the user is in 'pending-approval' state, they don't have right to post listings and initiate transactions.
+ *
+ * @param {Object} currentUser API entity.
+ * @returns {Boolean} true if currentUser has been approved (state is 'active').
+ */
+export const isUserAuthorized = (currentUser: CurrentUser) =>
+  currentUser?.attributes?.state === 'active';
+
+/**
+ * Get the user type configuration for the current user's user type
+ * @param {*} config marketplace configuration
+ * @param {*} currentUser API entity
+ * @returns a single user type configuration, if found
+ */
+const getCurrentUserTypeConfig = (
+  config: AppConfig,
+  currentUser: CurrentUser,
+) => {
+  const { userTypes } = config.user;
+  return userTypes.find(
+    ut =>
+      ut.userType === currentUser?.attributes?.profile?.publicData?.userType,
+  );
+};
+
+/**
+ * Check if the links for creating a new listing should be shown to the
+ * user currently browsing the marketplace.
+ * @param {Object} config Marketplace configuration
+ * @param {Object} currentUser API entity
+ * @returns {Boolean} true if the currentUser's user type, or the anonymous user configuration, is set to see the link
+ */
+export const showCreateListingLinkForUser = (
+  config: AppConfig,
+  currentUser: CurrentUser,
+) => {
+  const { topbar } = config;
+  const currentUserTypeConfig = getCurrentUserTypeConfig(config, currentUser);
+
+  const { accountLinksVisibility } = currentUserTypeConfig || {};
+
+  return currentUser && accountLinksVisibility
+    ? accountLinksVisibility.postListings
+    : currentUser
+    ? true
+    : topbar?.postListingsLink
+    ? topbar.postListingsLink.showToUnauthenticatedUsers
+    : true;
+};
+
+/**
+ * Check if payout details tab and payout methods tab should be shown for the user
+ * @param {Object} config Marketplace configuration
+ * @param {*} currentUser API entity
+ * @returns {Object} { showPayoutDetails: Boolean, showPaymentMethods: boolean }
+ */
+export const showPaymentDetailsForUser = (
+  config: AppConfig,
+  currentUser: CurrentUser,
+) => {
+  const currentUserTypeConfig = getCurrentUserTypeConfig(config, currentUser);
+  const { paymentMethods = true, payoutDetails = true } =
+    currentUserTypeConfig?.accountLinksVisibility || {};
+
+  return currentUser
+    ? {
+        showPayoutDetails: payoutDetails,
+        showPaymentMethods: paymentMethods,
+      }
+    : {
+        showPayoutDetails: false,
+        showPaymentMethods: false,
+      };
+};
+
+/**
+ * Check the roles defined for the current user
+ * @param {*} config Marketplace configuration
+ * @param {*} currentUser API entity
+ * @returns Object with attributes 'customer' and 'provider' and boolean values for each
+ */
+export const getCurrentUserTypeRoles = (
+  config: AppConfig,
+  currentUser: CurrentUser,
+) => {
+  const currentUserTypeConfig = getCurrentUserTypeConfig(config, currentUser);
+  return (
+    currentUserTypeConfig?.roles || {
+      customer: true,
+      provider: true,
+    }
+  );
 };

@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { CurrentUser, StorableError, Thunk } from '@appTypes/index';
 import { RootState } from '@redux/store';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { denormalisedResponseEntities } from '@util/data';
-import { addMarketplaceEntities } from '@redux/slices/marketplaceData.slice';
-import { util as sdkUtil } from '@util/sdkLoader';
 import { storableError } from '@util/errors';
+import { util as sdkUtil } from '@util/sdkLoader';
+import { showCreateListingLinkForUser } from '@util/userHelpers';
+import { AppConfig } from './hostedAssets.slice';
 
 export interface UserState {
   currentUser: null | CurrentUser;
@@ -20,7 +21,7 @@ export interface UserState {
 }
 
 const currentUserParameters = {
-  include: ['profileImage', 'stripeAccount'],
+  include: ['effectivePermissionSet', 'profileImage', 'stripeAccount'],
   'fields.image': [
     'variants.square-small',
     'variants.square-small2x',
@@ -50,10 +51,10 @@ const mergeCurrentUser = (
     ...oldRelationships
   } = oldCurrentUser || {};
 
-  if(newCurrentUser === null) {
+  if (newCurrentUser === null) {
     return null;
   }
-  if(oldCurrentUser === null) {
+  if (oldCurrentUser === null) {
     return newCurrentUser;
   }
 
@@ -293,5 +294,16 @@ export const currentUserMetadataSelector = (state: RootState) =>
   state.user?.currentUser?.attributes?.profile?.metadata;
 export const currentUserPublicDataSelector = (state: RootState) =>
   state.user?.currentUser?.attributes.profile?.publicData;
+export const canCurrentUserPostListingsSelector = (state: RootState) =>
+  state.user?.currentUser?.effectivePermissionSet?.attributes?.postListings ===
+  'permission/allow';
+export const showCreateListingLinkForCurrentUserSelector = (
+  state: RootState,
+  config: AppConfig | undefined,
+) => {
+  if (!config) return false;
+  if (!state.user?.currentUser) return false;
+  return showCreateListingLinkForUser(config, state.user?.currentUser);
+};
 
 export default userSlice.reducer;

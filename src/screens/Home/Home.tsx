@@ -1,12 +1,20 @@
-import { View, Text } from 'react-native';
-import React from 'react';
 import { Button } from '@components/index';
+import { SCREENS } from '@constants/screens';
+import { useConfiguration } from '@context/configurationContext';
+import { useNavigation } from '@react-navigation/native';
 import { loginOutInProgress, logout } from '@redux/slices/auth.slice';
+import { showCreateListingLinkForCurrentUserSelector } from '@redux/slices/user.slice';
 import { useAppDispatch, useTypedSelector } from '@redux/store';
+import { Text, View } from 'react-native';
 
 const Home = () => {
   const dispatch = useAppDispatch();
   const logoutInProcess = useTypedSelector(loginOutInProgress);
+  const config = useConfiguration();
+  const showCreateListingLink = useTypedSelector(state =>
+    showCreateListingLinkForCurrentUserSelector(state, config),
+  );
+  const navigation = useNavigation();
   const handleLogout = async () => {
     try {
       await dispatch(logout());
@@ -33,6 +41,14 @@ const Home = () => {
           width: 200,
         }}
       />
+      {showCreateListingLink ? (
+        <Button
+          title="Post a listing"
+          onPress={() =>
+            navigation.navigate(SCREENS.EDIT_LISTING_WIZARD as never)
+          }
+        />
+      ) : null}
     </View>
   );
 };

@@ -81,4 +81,9 @@ export type CurrentUser = {
   attributes: CurrentUserAttributes;
   profileImage?: Image;
   stripeAccount?: any; // TODO: Define StripeAccount type
+  effectivePermissionSet?: {
+    id: UUID;
+    type: 'permissionSet';
+    attributes: CurrentUserPermissions;
+  };
 };
