@@ -156,7 +156,7 @@ export const getNonUserFieldParams = (
   userFieldConfigs: UserFieldConfigItem[],
 ) => {
   const userFieldKeys = userFieldConfigs.map(({ scope, key }) =>
-    addScopePrefix(scope === 'metadata' ? 'meta' : scope, key),
+    addScopePrefix(scope, key),
   );
 
   return Object.entries(values).reduce((picked, [key, value]) => {
